@@ -268,10 +268,10 @@
     <p style="text-align: center; font-size: 1.1em; color: #c0c0c0; margin-bottom: 10px;">Share your thoughts about</p>
 
     <div id="tabsContainer" class="tabs-container">
-      <button class="tab-btn active" data-category="seniors">Seniors</button>
+      <button class="tab-btn active" data-category="general">General</button>
+      <button class="tab-btn" data-category="seniors">Seniors</button>
       <button class="tab-btn" data-category="juniors">Juniors</button>
       <button class="tab-btn" data-category="faculty">Faculty</button>
-      <button class="tab-btn" data-category="general">General</button>
       <button class="tab-btn" data-category="all">All Comments</button>
     </div>
 
@@ -315,7 +315,7 @@
     const db = getDatabase(app);
 
     // --- Global State ---
-    let currentCategory = 'seniors';
+    let currentCategory = 'general';
     let currentCommentsRef = null; // To store the current DB reference
     const reactions = ["👍", "😂", "😍", "😢", "😮", "😡", "😀"];
 
@@ -454,7 +454,7 @@
         } else {
           // Standard logic for a single category
           Object.entries(data).forEach(([id, c]) => {
-            comments.push({ id, ...c });
+            comments.push({ id, ...c, isRootComment: false }); // Explicitly set root flag
           });
         }
         // --- End New ---
@@ -657,5 +657,4 @@
   </script>
 </body>
 </html>
-
 
