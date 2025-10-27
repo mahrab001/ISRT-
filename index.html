@@ -280,48 +280,36 @@
   </div>
 
   <script type="module">
-    // Import Firebase services
+    // --- Import Firebase RTDB Services ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import {
-      getAuth,
-      signInAnonymously,
-      signInWithCustomToken,
-      onAuthStateChanged,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      doc,
-      addDoc,
-      onSnapshot,
-      updateDoc,
-      serverTimestamp,
-      query,
-      where,
-      setLogLevel,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      getDatabase,
+      ref,
+      push,
+      onValue,
+      update,
+      off,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-    // --- Firebase & App Configuration ---
+    // --- Firebase Configuration (from script.js) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBi0DtNzX0niHbV4LtId7PaxLoD8Pphy6U",
+      authDomain: "comment-on-isrt-8a634.firebaseapp.com",
+      databaseURL: "https://comment-on-isrt-8a634-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "comment-on-isrt-8a634",
+      storageBucket: "comment-on-isrt-8a634.appspot.com",
+      messagingSenderId: "173989173917",
+      appId: "1:173989173917:web:613693b2c98c4c121e9274",
+    };
 
-    // Use environment variables provided by the platform
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-
-    // Initialize Firebase
+    // --- Initialize Firebase ---
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    setLogLevel('Debug'); // Enable Firestore logging
+    const db = getDatabase(app);
 
     // --- Global State ---
     let currentCategory = 'seniors';
-    let userId = null;
-    let isAuthReady = false;
-    let currentCommentsUnsubscribe = null; // Function to detach listener
+    let currentCommentsRef = null; // To store the current DB reference
     const reactions = ["👍", "😂", "😍", "😢", "😮", "😡", "😀"];
-    
-    // To prevent rapid re-fetching on tab click
-    let lastTabClickTime = 0; 
 
     // --- DOM Elements ---
     const commentForm = document.getElementById("commentForm");
@@ -331,60 +319,6 @@
     const tabsContainer = document.getElementById("tabsContainer");
     const loadingElement = document.getElementById("loading");
 
-    // --- Helper Functions for Firestore Paths ---
-
-    /**
-     * Gets the collection reference for parent comments.
-     */
-    function getCommentsColRef() {
-      // FIX: Path must have an odd number of segments for a collection.
-      // Combined 'feedback-app' and 'comments' into one collection name.
-      return collection(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments');
-    }
-
-    /**
-     * Gets the collection reference for replies to a specific comment.
-     * @param {string} commentId - The ID of the parent comment.
-     */
-    function getRepliesColRef(commentId) {
-      // FIX: Path must have an odd number of segments for a collection.
-      return collection(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments', commentId, 'replies');
-    }
-
-    // --- Authentication ---
-    
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        console.log("User is authenticated:", user.uid);
-        userId = user.uid;
-      } else {
-        console.log("No user. Signing in anonymously...");
-        try {
-          // Sign in using the provided token or fall back to anonymous
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await signInWithCustomToken(auth, __initial_auth_token);
-          } else {
-            await signInAnonymously(auth);
-          }
-        } catch (error) {
-          console.error("Error during sign-in:", error);
-          // Show error to user
-        }
-      }
-      
-      // Only set auth ready and load data *after* we have a user ID
-      if (userId && !isAuthReady) {
-          isAuthReady = true;
-          submitButton.disabled = false;
-          submitButton.textContent = "Submit Anonymous Comment";
-          loadComments(); // Load initial comments
-      }
-    });
-
-    // Disable form until auth is ready
-    submitButton.disabled = true;
-    submitButton.textContent = "Connecting...";
-
     // --- Event Listeners ---
 
     /**
@@ -392,14 +326,6 @@
      */
     tabsContainer.addEventListener("click", (e) => {
       if (!e.target.classList.contains("tab-btn")) return;
-      
-      // Throttle tab clicks to prevent spamming Firestore
-      const now = Date.now();
-      if (now - lastTabClickTime < 1000) {
-        console.log("Tab click throttled");
-        return;
-      }
-      lastTabClickTime = now;
 
       const newCategory = e.target.dataset.category;
       if (newCategory === currentCategory) return;
@@ -414,13 +340,8 @@
     /**
      * Handle New Comment Submission
      */
-    commentForm.addEventListener("submit", async (e) => {
+    commentForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (!isAuthReady) {
-        console.warn("Auth not ready, comment not sent.");
-        return;
-      }
-
       const text = commentText.value.trim();
       if (!text) return;
 
@@ -429,18 +350,19 @@
 
       const comment = {
         text,
-        category: currentCategory,
-        timestamp: serverTimestamp(),
+        category: currentCategory, // Keep category for tab filtering
+        timestamp: Date.now(),
         reactions: {},
-        authorId: userId // Store anonymous user ID
+        replies: {},
       };
 
       try {
-        await addDoc(getCommentsColRef(), comment);
+        // Get a DB ref based on the current category
+        const commentsRef = ref(db, `comments/${currentCategory}`);
+        push(commentsRef, comment);
         commentText.value = "";
       } catch (error) {
         console.error("Error adding comment: ", error);
-        // Inform user of error
       } finally {
         submitButton.disabled = false;
         submitButton.textContent = "Submit Anonymous Comment";
@@ -451,42 +373,38 @@
      * Load Comments for the Current Category
      */
     function loadComments() {
-      if (!isAuthReady) {
-        console.log("Deferring comment load until auth is ready.");
-        return;
-      }
-
       console.log(`Loading comments for: ${currentCategory}`);
       commentsContainer.innerHTML = "";
       loadingElement.style.display = "block";
 
       // Detach the old listener, if one exists
-      if (currentCommentsUnsubscribe) {
+      if (currentCommentsRef) {
         console.log("Detaching previous listener.");
-        currentCommentsUnsubscribe();
-        currentCommentsUnsubscribe = null;
+        off(currentCommentsRef);
+        currentCommentsRef = null;
       }
 
-      // Create a new query for the current category
-      const q = query(getCommentsColRef(), where("category", "==", currentCategory));
+      // Create a new ref for the current category
+      currentCommentsRef = ref(db, `comments/${currentCategory}`);
 
       // Attach the new real-time listener
-      currentCommentsUnsubscribe = onSnapshot(q, (snapshot) => {
+      onValue(currentCommentsRef, (snapshot) => {
         loadingElement.style.display = "none";
+        const data = snapshot.val();
         
-        if (snapshot.empty) {
+        if (!data) {
           commentsContainer.innerHTML = "<p class='empty-state'>No comments yet. Be the first!</p>";
           return;
         }
 
         // Get and sort comments in memory
         const comments = [];
-        snapshot.forEach((doc) => {
-          comments.push({ id: doc.id, ...doc.data() });
+        Object.entries(data).forEach(([id, c]) => {
+          comments.push({ id, ...c });
         });
         
-        // Sort by timestamp, descending. Handle null timestamps during server write.
-        comments.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+        // Sort by timestamp, descending.
+        comments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
         // Render comments
         commentsContainer.innerHTML = ""; // Clear for re-render
@@ -504,7 +422,7 @@
 
     /**
      * Creates the DOM element for a single comment or reply.
-     * @param {object} item - The comment or reply object from Firestore.
+     * @param {object} item - The comment or reply object from RTDB.
      * @param {boolean} isReply - True if this is a reply.
      * @param {string | null} parentId - The ID of the parent comment (if it's a reply).
      */
@@ -543,24 +461,16 @@
         replyForm.appendChild(replySubmit);
 
         replyBtn.addEventListener("click", (e) => {
-          // --- FIX ---
-          // Check if the click target or its parent is a reaction.
-          // This prevents clicks on reactions (especially in replies)
-          // from bubbling up and triggering the reply form.
           if (e.target.closest('.reaction')) {
             e.preventDefault();
             e.stopImmediatePropagation();
             return;
           }
-          // --- END FIX ---
-
           e.preventDefault();
           e.stopPropagation();
-          // Hide all other open reply forms
           document.querySelectorAll('.reply-form').forEach(f => {
               if (f !== replyForm) f.style.display = 'none';
           });
-          // Toggle current form
           const isOpen = replyForm.style.display === "block";
           replyForm.style.display = isOpen ? "none" : "block";
           if (!isOpen) {
@@ -568,10 +478,8 @@
           }
         });
 
-        replyForm.addEventListener("submit", async (e) => {
+        replyForm.addEventListener("submit", (e) => {
           e.preventDefault();
-          if (!isAuthReady) return;
-
           const replyText = replyInput.value.trim();
           if (!replyText) return;
 
@@ -579,13 +487,14 @@
           
           const reply = {
             text: replyText,
-            timestamp: serverTimestamp(),
+            timestamp: Date.now(),
             reactions: {},
-            authorId: userId
           };
 
           try {
-            await addDoc(getRepliesColRef(item.id), reply);
+            // Path must include category and parent comment ID
+            const repliesRef = ref(db, `comments/${currentCategory}/${item.id}/replies`);
+            push(repliesRef, reply);
             replyInput.value = "";
             replyForm.style.display = "none";
           } catch (error) {
@@ -605,32 +514,27 @@
         const count = item.reactions?.[emoji] || 0;
         span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
         span.classList.add("reaction");
-        // span.dataset.reacted = (item.reactions?.[emoji]?.[userId] === true); // For tracking who reacted
 
-        span.addEventListener("click", async (e) => {
+        span.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopImmediatePropagation();
-          if (!isAuthReady) return;
           
-          // Determine the correct document reference
-          let docRef;
+          let path;
           if (isReply) {
-            // FIX: Corrected path to match the 8 segments required for a reply document
-            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments', parentId, 'replies', item.id);
+            // Path for a reply's reaction
+            path = `comments/${currentCategory}/${parentId}/replies/${item.id}/reactions/${emoji}`;
           } else {
-            // FIX: Corrected path to match the 6 segments required for a comment document
-            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments', item.id);
+            // Path for a parent comment's reaction
+            path = `comments/${currentCategory}/${item.id}/reactions/${emoji}`;
           }
 
-          // Use dot notation to update the map field
           const newCount = (item.reactions?.[emoji] || 0) + 1;
-          const reactionPath = `reactions.${emoji}`;
           
           try {
-            await updateDoc(docRef, {
-              [reactionPath]: newCount
-            });
-            // Note: onSnapshot will handle the UI update automatically
+            update(ref(db), { [path]: newCount });
+            // The onValue listener will update this, but for instant
+            // feedback, we can update the text content locally.
+            span.textContent = `${emoji} ${newCount}`;
           } catch (error) {
             console.error("Error updating reaction: ", error);
           }
@@ -643,39 +547,31 @@
       box.appendChild(controls);
       if (replyForm) box.appendChild(replyForm);
 
-      // --- Load Replies (for parent comments only) ---
-      if (!isReply) {
+      // --- Render Replies (for parent comments only) ---
+      // This works because the main onValue listener gets the entire object
+      // including the 'replies' node.
+      if (!isReply && item.replies) {
         const repliesDiv = document.createElement("div");
         repliesDiv.classList.add("replies");
         box.appendChild(repliesDiv);
 
-        // Attach a listener for this comment's replies
-        const repliesQuery = query(getRepliesColRef(item.id));
-        
-        onSnapshot(repliesQuery, (replySnapshot) => {
-          const replies = [];
-          replySnapshot.forEach((doc) => {
-            replies.push({ id: doc.id, ...doc.data() });
-          });
+        // Sort replies by timestamp, ascending
+        const replies = Object.entries(item.replies)
+          .map(([id, r]) => ({ id, ...r }))
+          .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-          // Sort replies by timestamp, ascending
-          replies.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
-
-          repliesDiv.innerHTML = ""; // Clear for re-render
-          replies.forEach((r) => {
-            // Pass `true` for isReply and the parent comment's ID
-            repliesDiv.appendChild(createCommentElement(r, true, item.id));
-          });
-        }, (error) => {
-          console.error(`Error loading replies for comment ${item.id}: `, error);
-          repliesDiv.innerHTML = "<p style='font-size: 12px; color: #aaa;'>Error loading replies.</p>";
+        replies.forEach((r) => {
+          // Pass `true` for isReply and the parent comment's ID
+          repliesDiv.appendChild(createCommentElement(r, true, item.id));
         });
       }
 
       return box;
     }
 
-    // Initial load is triggered by onAuthStateChanged
+    // Initial load
+    loadComments();
   </script>
 </body>
 </html>
+
