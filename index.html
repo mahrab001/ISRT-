@@ -48,6 +48,7 @@
       gap: 10px;
       margin-bottom: 20px;
       border-bottom: 2px solid #333;
+      flex-wrap: wrap; /* Allow tabs to wrap on small screens */
     }
 
     .tab-btn {
@@ -156,6 +157,8 @@
     .reaction-options {
       display: flex;
       gap: 6px;
+      /* Ensure reactions are on the right */
+      margin-left: auto; 
     }
 
     .reaction {
@@ -188,6 +191,8 @@
       color: #58a6ff;
       transition: color 0.3s;
       padding: 4px 0;
+      /* Ensure reply button is on the left */
+      margin-right: auto;
     }
 
     .reply-btn:hover {
@@ -491,7 +496,8 @@
       let replyForm = null;
 
       // --- Reply Button & Form (for parent comments only) ---
-      if (!isReply) {
+      // --- Updated: Only show reply button if NOT a reply AND NOT in 'all' category ---
+      if (!isReply && currentCategory !== 'all') {
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "💬 Reply";
         replyBtn.classList.add("reply-btn");
