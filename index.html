@@ -266,6 +266,8 @@
       <button class="tab-btn active" data-category="seniors">Seniors</button>
       <button class="tab-btn" data-category="juniors">Juniors</button>
       <button class="tab-btn" data-category="faculty">Faculty</button>
+      <button class="tab-btn" data-category="general">General</button>
+      <button class="tab-btn" data-category="all">All Comments</button>
     </div>
 
     <form id="commentForm">
@@ -330,6 +332,14 @@
       const newCategory = e.target.dataset.category;
       if (newCategory === currentCategory) return;
 
+      // --- New: Show/Hide comment form based on tab ---
+      if (newCategory === 'all') {
+        commentForm.style.display = 'none';
+      } else {
+        commentForm.style.display = 'block';
+      }
+      // --- End New ---
+
       tabsContainer.querySelector(".active").classList.remove("active");
       e.target.classList.add("active");
       currentCategory = newCategory;
@@ -350,7 +360,7 @@
 
       const comment = {
         text,
-        category: currentCategory, // Keep category for tab filtering
+        category: currentCategory, // Store the actual category
         timestamp: Date.now(),
         reactions: {},
         replies: {},
@@ -358,6 +368,7 @@
 
       try {
         // Get a DB ref based on the current category
+        // This works because the form is hidden when currentCategory === 'all'
         const commentsRef = ref(db, `comments/${currentCategory}`);
         push(commentsRef, comment);
         commentText.value = "";
@@ -384,8 +395,15 @@
         currentCommentsRef = null;
       }
 
-      // Create a new ref for the current category
-      currentCommentsRef = ref(db, `comments/${currentCategory}`);
+      // --- New: Create ref for 'all' or a specific category ---
+      let newRef;
+      if (currentCategory === 'all') {
+        newRef = ref(db, 'comments'); // Listen to the root 'comments' node
+      } else {
+        newRef = ref(db, `comments/${currentCategory}`); // Listen to specific category
+      }
+      currentCommentsRef = newRef;
+      // --- End New ---
 
       // Attach the new real-time listener
       onValue(currentCommentsRef, (snapshot) => {
@@ -397,13 +415,43 @@
           return;
         }
 
-        // Get and sort comments in memory
+        // --- New: Process data for 'all' or a single category ---
         const comments = [];
-        Object.entries(data).forEach(([id, c]) => {
-          comments.push({ id, ...c });
-        });
+        if (currentCategory === 'all') {
+          // New aggregation logic for 'all' tab
+          const allNodes = data; // This is the root 'comments' node
+          Object.entries(allNodes).forEach(([key, value]) => {
+            if (value && typeof value.text === 'string' && typeof value.timestamp === 'number') {
+              // This is a single, top-level (old) comment.
+              // We check for 'text' and 'timestamp' to be sure.
+              comments.push({ 
+                id: key, 
+                ...value, 
+                category: value.category || 'general' // Default old comments to 'general'
+              });
+            } else if (value && typeof value === 'object') {
+              // This is a category node (e.g., 'seniors', 'juniors')
+              const categoryName = key;
+              const commentsInCategory = value;
+              Object.entries(commentsInCategory).forEach(([commentId, commentData]) => {
+                // This is a comment from within a category
+                comments.push({ 
+                  id: commentId, 
+                  ...commentData, 
+                  category: categoryName // The category is the key
+                });
+              });
+            }
+          });
+        } else {
+          // Standard logic for a single category
+          Object.entries(data).forEach(([id, c]) => {
+            comments.push({ id, ...c });
+          });
+        }
+        // --- End New ---
         
-        // Sort by timestamp, descending.
+        // Sort by timestamp, descending. (Works for both cases)
         comments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
         // Render comments
@@ -425,8 +473,9 @@
      * @param {object} item - The comment or reply object from RTDB.
      * @param {boolean} isReply - True if this is a reply.
      * @param {string | null} parentId - The ID of the parent comment (if it's a reply).
+     * @param {string | null} parentCategory - The category of the parent comment.
      */
-    function createCommentElement(item, isReply = false, parentId = null) {
+    function createCommentElement(item, isReply = false, parentId = null, parentCategory = null) {
       const box = document.createElement("div");
       box.classList.add(isReply ? "reply-box" : "comment-box");
       box.dataset.id = item.id;
@@ -492,8 +541,8 @@
           };
 
           try {
-            // Path must include category and parent comment ID
-            const repliesRef = ref(db, `comments/${currentCategory}/${item.id}/replies`);
+            // --- Updated: Use item.category to post reply to correct category ---
+            const repliesRef = ref(db, `comments/${item.category}/${item.id}/replies`);
             push(repliesRef, reply);
             replyInput.value = "";
             replyForm.style.display = "none";
@@ -519,14 +568,24 @@
           e.preventDefault();
           e.stopImmediatePropagation();
           
+          // --- Updated: Determine correct category for reaction path ---
           let path;
+          // If it's a reply, use parentCategory. If it's a parent, use item.category.
+          const itemCategory = parentCategory || item.category;
+
+          if (!itemCategory) {
+            console.error("Missing category for reaction!", item);
+            return; // Safety check
+          }
+          
           if (isReply) {
             // Path for a reply's reaction
-            path = `comments/${currentCategory}/${parentId}/replies/${item.id}/reactions/${emoji}`;
+            path = `comments/${itemCategory}/${parentId}/replies/${item.id}/reactions/${emoji}`;
           } else {
             // Path for a parent comment's reaction
-            path = `comments/${currentCategory}/${item.id}/reactions/${emoji}`;
+            path = `comments/${itemCategory}/${item.id}/reactions/${emoji}`;
           }
+          // --- End Update ---
 
           const newCount = (item.reactions?.[emoji] || 0) + 1;
           
@@ -561,8 +620,8 @@
           .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
         replies.forEach((r) => {
-          // Pass `true` for isReply and the parent comment's ID
-          repliesDiv.appendChild(createCommentElement(r, true, item.id));
+          // --- Updated: Pass parent's category to recursive call ---
+          repliesDiv.appendChild(createCommentElement(r, true, item.id, item.category));
         });
       }
 
@@ -574,4 +633,6 @@
   </script>
 </body>
 </html>
+
+
 
