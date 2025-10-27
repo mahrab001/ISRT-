@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anonymous ISRT Feedback ✍️</title>
+  
+  <style>
+    /* ====== General Page Styling ====== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter",
+        "Helvetica Neue", Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      line-height: 1.6;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background-color: #1e1e1e;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      color: #58a6ff;
+      margin-top: 0;
+    }
+
+    p {
+      color: #b0b0b0;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #333;
+      margin: 20px 0;
+    }
+
+    /* ====== Tabs Styling ====== */
+    .tabs-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+    }
+
+    .tab-btn {
+      padding: 10px 15px;
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      color: #aaa;
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .tab-btn:hover {
+      color: #e0e0e0;
+      background-color: #2a2a2a;
+    }
+
+    .tab-btn.active {
+      color: #58a6ff;
+      border-bottom-color: #58a6ff;
+    }
+
+    /* ====== Comment Form ====== */
+    #commentForm textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      resize: vertical;
+      min-height: 80px;
+      margin-bottom: 10px;
+      background-color: #222;
+      color: #e0e0e0;
+      font-size: 15px;
+    }
+
+    #commentForm textarea:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    }
+
+    #commentForm button {
+      width: 100%;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    #commentForm button:hover {
+      background-color: #0056b3;
+    }
+
+    #commentForm button:active {
+      transform: scale(0.98);
+    }
+
+    /* ====== Comments & Replies ====== */
+    .comment-box,
+    .reply-box {
+      position: relative;
+      border: 1px solid #333;
+      padding: 12px 15px 45px 15px; /* Increased bottom padding for controls */
+      border-radius: 8px;
+      margin-top: 12px;
+      background-color: #252525;
+    }
+
+    .reply-box {
+      margin-left: 30px; /* Slightly reduced indent */
+      background-color: #282828;
+      border-color: #444;
+    }
+
+    .comment-box p,
+    .reply-box p {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      color: #f5f5f5;
+      white-space: pre-wrap; /* Keeps line breaks */
+      word-break: break-word;
+    }
+
+    /* ====== Reaction and Reply Controls ====== */
+    .controls {
+      position: absolute;
+      bottom: 8px;
+      left: 15px;
+      right: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .reaction-options {
+      display: flex;
+      gap: 6px;
+    }
+
+    .reaction {
+      cursor: pointer;
+      font-size: 14px; /* Slightly smaller for a cleaner look */
+      transition: transform 0.2s, filter 0.2s;
+      user-select: none;
+      padding: 4px 6px;
+      border-radius: 10px;
+      background-color: #333;
+    }
+
+    .reaction:hover {
+      transform: scale(1.2);
+      background-color: #444;
+    }
+
+    .reaction.reacted {
+      /* Placeholder for a "reacted" state */
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .reply-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #58a6ff;
+      transition: color 0.3s;
+      padding: 4px 0;
+    }
+
+    .reply-btn:hover {
+      color: #1e90ff;
+    }
+
+    .replies {
+      margin-top: 10px;
+      /* margin-left: 20px; Handled by reply-box margin */
+    }
+
+    /* ====== Reply Form ====== */
+    .reply-form {
+      margin-top: 15px;
+      background-color: #202020;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .reply-form textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #555;
+      border-radius: 4px;
+      resize: vertical;
+      min-height: 60px;
+      padding: 6px;
+      background-color: #2a2a2a;
+      color: #e0e0e0;
+    }
+
+    .reply-form textarea:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    .reply-form button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin-top: 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .reply-form button:hover {
+      background-color: #0056b3;
+    }
+
+    /* ====== Loading/Empty State ====== */
+    #commentsContainer .empty-state,
+    #loading {
+      text-align: center;
+      color: #bbb;
+      font-style: italic;
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #222;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Anonymous ISRT Feedback ✍️</h1>
+    <p>Write a comment about ISRT without sharing any personal details. All comments are anonymous.</p>
+
+    <p style="text-align: center; font-size: 1.1em; color: #c0c0c0; margin-bottom: 10px;">Share your thoughts about</p>
+
+    <div id="tabsContainer" class="tabs-container">
+      <button class="tab-btn active" data-category="seniors">Seniors</button>
+      <button class="tab-btn" data-category="juniors">Juniors</button>
+      <button class="tab-btn" data-category="faculty">Faculty</button>
+    </div>
+
+    <form id="commentForm">
+      <textarea id="commentText" placeholder="Your anonymous comment here..." required></textarea>
+      <button type="submit" id="submitButton">Submit Anonymous Comment</button>
+    </form>
+
+    <hr />
+    <h2>Previous Comments</h2>
+    <div id="loading" style="text-align: center; margin: 20px 0;">Loading comments...</div>
+    <div id="commentsContainer"><p class="empty-state">No comments yet. Be the first!</p></div>
+  </div>
+
+  <script type="module">
+    // Import Firebase services
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      signInWithCustomToken,
+      onAuthStateChanged,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      addDoc,
+      onSnapshot,
+      updateDoc,
+      serverTimestamp,
+      query,
+      where,
+      setLogLevel,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- Firebase & App Configuration ---
+
+    // Use environment variables provided by the platform
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    setLogLevel('Debug'); // Enable Firestore logging
+
+    // --- Global State ---
+    let currentCategory = 'seniors';
+    let userId = null;
+    let isAuthReady = false;
+    let currentCommentsUnsubscribe = null; // Function to detach listener
+    const reactions = ["👍", "😂", "😍", "😢", "😮", "😡", "😀"];
+    
+    // To prevent rapid re-fetching on tab click
+    let lastTabClickTime = 0; 
+
+    // --- DOM Elements ---
+    const commentForm = document.getElementById("commentForm");
+    const commentText = document.getElementById("commentText");
+    const submitButton = document.getElementById("submitButton");
+    const commentsContainer = document.getElementById("commentsContainer");
+    const tabsContainer = document.getElementById("tabsContainer");
+    const loadingElement = document.getElementById("loading");
+
+    // --- Helper Functions for Firestore Paths ---
+
+    /**
+     * Gets the collection reference for parent comments.
+     */
+    function getCommentsColRef() {
+      // FIX: Path must have an odd number of segments for a collection.
+      // Combined 'feedback-app' and 'comments' into one collection name.
+      return collection(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments');
+    }
+
+    /**
+     * Gets the collection reference for replies to a specific comment.
+     * @param {string} commentId - The ID of the parent comment.
+     */
+    function getRepliesColRef(commentId) {
+      // FIX: Path must have an odd number of segments for a collection.
+      return collection(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments', commentId, 'replies');
+    }
+
+    // --- Authentication ---
+    
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log("User is authenticated:", user.uid);
+        userId = user.uid;
+      } else {
+        console.log("No user. Signing in anonymously...");
+        try {
+          // Sign in using the provided token or fall back to anonymous
+          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+        } catch (error) {
+          console.error("Error during sign-in:", error);
+          // Show error to user
+        }
+      }
+      
+      // Only set auth ready and load data *after* we have a user ID
+      if (userId && !isAuthReady) {
+          isAuthReady = true;
+          submitButton.disabled = false;
+          submitButton.textContent = "Submit Anonymous Comment";
+          loadComments(); // Load initial comments
+      }
+    });
+
+    // Disable form until auth is ready
+    submitButton.disabled = true;
+    submitButton.textContent = "Connecting...";
+
+    // --- Event Listeners ---
+
+    /**
+     * Handle Tab Switching
+     */
+    tabsContainer.addEventListener("click", (e) => {
+      if (!e.target.classList.contains("tab-btn")) return;
+      
+      // Throttle tab clicks to prevent spamming Firestore
+      const now = Date.now();
+      if (now - lastTabClickTime < 1000) {
+        console.log("Tab click throttled");
+        return;
+      }
+      lastTabClickTime = now;
+
+      const newCategory = e.target.dataset.category;
+      if (newCategory === currentCategory) return;
+
+      tabsContainer.querySelector(".active").classList.remove("active");
+      e.target.classList.add("active");
+      currentCategory = newCategory;
+      
+      loadComments();
+    });
+
+    /**
+     * Handle New Comment Submission
+     */
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!isAuthReady) {
+        console.warn("Auth not ready, comment not sent.");
+        return;
+      }
+
+      const text = commentText.value.trim();
+      if (!text) return;
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
+
+      const comment = {
+        text,
+        category: currentCategory,
+        timestamp: serverTimestamp(),
+        reactions: {},
+        authorId: userId // Store anonymous user ID
+      };
+
+      try {
+        await addDoc(getCommentsColRef(), comment);
+        commentText.value = "";
+      } catch (error) {
+        console.error("Error adding comment: ", error);
+        // Inform user of error
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit Anonymous Comment";
+      }
+    });
+
+    /**
+     * Load Comments for the Current Category
+     */
+    function loadComments() {
+      if (!isAuthReady) {
+        console.log("Deferring comment load until auth is ready.");
+        return;
+      }
+
+      console.log(`Loading comments for: ${currentCategory}`);
+      commentsContainer.innerHTML = "";
+      loadingElement.style.display = "block";
+
+      // Detach the old listener, if one exists
+      if (currentCommentsUnsubscribe) {
+        console.log("Detaching previous listener.");
+        currentCommentsUnsubscribe();
+        currentCommentsUnsubscribe = null;
+      }
+
+      // Create a new query for the current category
+      const q = query(getCommentsColRef(), where("category", "==", currentCategory));
+
+      // Attach the new real-time listener
+      currentCommentsUnsubscribe = onSnapshot(q, (snapshot) => {
+        loadingElement.style.display = "none";
+        
+        if (snapshot.empty) {
+          commentsContainer.innerHTML = "<p class='empty-state'>No comments yet. Be the first!</p>";
+          return;
+        }
+
+        // Get and sort comments in memory
+        const comments = [];
+        snapshot.forEach((doc) => {
+          comments.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Sort by timestamp, descending. Handle null timestamps during server write.
+        comments.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+        // Render comments
+        commentsContainer.innerHTML = ""; // Clear for re-render
+        comments.forEach((c) => {
+          const el = createCommentElement(c, false, null);
+          commentsContainer.appendChild(el);
+        });
+
+      }, (error) => {
+        console.error("Error loading comments: ", error);
+        loadingElement.style.display = "none";
+        commentsContainer.innerHTML = "<p class='empty-state'>Error loading comments.</p>";
+      });
+    }
+
+    /**
+     * Creates the DOM element for a single comment or reply.
+     * @param {object} item - The comment or reply object from Firestore.
+     * @param {boolean} isReply - True if this is a reply.
+     * @param {string | null} parentId - The ID of the parent comment (if it's a reply).
+     */
+    function createCommentElement(item, isReply = false, parentId = null) {
+      const box = document.createElement("div");
+      box.classList.add(isReply ? "reply-box" : "comment-box");
+      box.dataset.id = item.id;
+
+      const text = document.createElement("p");
+      text.textContent = item.text;
+      box.appendChild(text);
+
+      const controls = document.createElement("div");
+      controls.classList.add("controls");
+
+      let replyForm = null;
+
+      // --- Reply Button & Form (for parent comments only) ---
+      if (!isReply) {
+        const replyBtn = document.createElement("button");
+        replyBtn.textContent = "💬 Reply";
+        replyBtn.classList.add("reply-btn");
+        controls.appendChild(replyBtn);
+
+        replyForm = document.createElement("form");
+        replyForm.classList.add("reply-form");
+        replyForm.style.display = "none";
+
+        const replyInput = document.createElement("textarea");
+        replyInput.placeholder = "Write a reply...";
+        const replySubmit = document.createElement("button");
+        replySubmit.type = "submit";
+        replySubmit.textContent = "Post Reply";
+
+        replyForm.appendChild(replyInput);
+        replyForm.appendChild(replySubmit);
+
+        replyBtn.addEventListener("click", (e) => {
+          // --- FIX ---
+          // Check if the click target or its parent is a reaction.
+          // This prevents clicks on reactions (especially in replies)
+          // from bubbling up and triggering the reply form.
+          if (e.target.closest('.reaction')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+          }
+          // --- END FIX ---
+
+          e.preventDefault();
+          e.stopPropagation();
+          // Hide all other open reply forms
+          document.querySelectorAll('.reply-form').forEach(f => {
+              if (f !== replyForm) f.style.display = 'none';
+          });
+          // Toggle current form
+          const isOpen = replyForm.style.display === "block";
+          replyForm.style.display = isOpen ? "none" : "block";
+          if (!isOpen) {
+            replyInput.focus();
+          }
+        });
+
+        replyForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!isAuthReady) return;
+
+          const replyText = replyInput.value.trim();
+          if (!replyText) return;
+
+          replySubmit.disabled = true;
+          
+          const reply = {
+            text: replyText,
+            timestamp: serverTimestamp(),
+            reactions: {},
+            authorId: userId
+          };
+
+          try {
+            await addDoc(getRepliesColRef(item.id), reply);
+            replyInput.value = "";
+            replyForm.style.display = "none";
+          } catch (error) {
+            console.error("Error adding reply: ", error);
+          } finally {
+            replySubmit.disabled = false;
+          }
+        });
+      }
+
+      // --- Reaction Buttons (for all items) ---
+      const reactionContainer = document.createElement("div");
+      reactionContainer.classList.add("reaction-options");
+
+      reactions.forEach((emoji) => {
+        const span = document.createElement("span");
+        const count = item.reactions?.[emoji] || 0;
+        span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
+        span.classList.add("reaction");
+        // span.dataset.reacted = (item.reactions?.[emoji]?.[userId] === true); // For tracking who reacted
+
+        span.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if (!isAuthReady) return;
+          
+          // Determine the correct document reference
+          let docRef;
+          if (isReply) {
+            // FIX: Corrected path to match the 8 segments required for a reply document
+            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments', parentId, 'replies', item.id);
+          } else {
+            // FIX: Corrected path to match the 6 segments required for a comment document
+            docRef = doc(db, 'artifacts', appId, 'public', 'data', 'feedback-app-comments', item.id);
+          }
+
+          // Use dot notation to update the map field
+          const newCount = (item.reactions?.[emoji] || 0) + 1;
+          const reactionPath = `reactions.${emoji}`;
+          
+          try {
+            await updateDoc(docRef, {
+              [reactionPath]: newCount
+            });
+            // Note: onSnapshot will handle the UI update automatically
+          } catch (error) {
+            console.error("Error updating reaction: ", error);
+          }
+        });
+
+        reactionContainer.appendChild(span);
+      });
+      
+      controls.appendChild(reactionContainer);
+      box.appendChild(controls);
+      if (replyForm) box.appendChild(replyForm);
+
+      // --- Load Replies (for parent comments only) ---
+      if (!isReply) {
+        const repliesDiv = document.createElement("div");
+        repliesDiv.classList.add("replies");
+        box.appendChild(repliesDiv);
+
+        // Attach a listener for this comment's replies
+        const repliesQuery = query(getRepliesColRef(item.id));
+        
+        onSnapshot(repliesQuery, (replySnapshot) => {
+          const replies = [];
+          replySnapshot.forEach((doc) => {
+            replies.push({ id: doc.id, ...doc.data() });
+          });
+
+          // Sort replies by timestamp, ascending
+          replies.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+
+          repliesDiv.innerHTML = ""; // Clear for re-render
+          replies.forEach((r) => {
+            // Pass `true` for isReply and the parent comment's ID
+            repliesDiv.appendChild(createCommentElement(r, true, item.id));
+          });
+        }, (error) => {
+          console.error(`Error loading replies for comment ${item.id}: `, error);
+          repliesDiv.innerHTML = "<p style='font-size: 12px; color: #aaa;'>Error loading replies.</p>";
+        });
+      }
+
+      return box;
+    }
+
+    // Initial load is triggered by onAuthStateChanged
+  </script>
+</body>
+</html>
