@@ -433,7 +433,8 @@
               comments.push({ 
                 id: key, 
                 ...value, 
-                category: value.category || 'general' // Default old comments to 'general'
+                category: value.category || 'general', // Default old comments to 'general'
+                isRootComment: true // Add flag for old comments
               });
             } else if (value && typeof value === 'object') {
               // This is a category node (e.g., 'seniors', 'juniors')
@@ -444,7 +445,8 @@
                 comments.push({ 
                   id: commentId, 
                   ...commentData, 
-                  category: categoryName // The category is the key
+                  category: categoryName, // The category is the key
+                  isRootComment: false // Add flag for new comments
                 });
               });
             }
@@ -480,8 +482,9 @@
      * @param {boolean} isReply - True if this is a reply.
      * @param {string | null} parentId - The ID of the parent comment (if it's a reply).
      * @param {string | null} parentCategory - The category of the parent comment.
+     * @param {boolean} parentIsRoot - True if the parent comment is a root-level comment.
      */
-    function createCommentElement(item, isReply = false, parentId = null, parentCategory = null) {
+    function createCommentElement(item, isReply = false, parentId = null, parentCategory = null, parentIsRoot = false) {
       const box = document.createElement("div");
       box.classList.add(isReply ? "reply-box" : "comment-box");
       box.dataset.id = item.id;
@@ -548,8 +551,13 @@
           };
 
           try {
-            // --- Updated: Use item.category to post reply to correct category ---
-            const repliesRef = ref(db, `comments/${item.category}/${item.id}/replies`);
+            // --- Updated: Use item.category and isRootComment to post reply to correct path ---
+            let repliesRef;
+            if (item.isRootComment) {
+              repliesRef = ref(db, `comments/${item.id}/replies`);
+            } else {
+              repliesRef = ref(db, `comments/${item.category}/${item.id}/replies`);
+            }
             push(repliesRef, reply);
             replyInput.value = "";
             replyForm.style.display = "none";
@@ -579,6 +587,7 @@
           let path;
           // If it's a reply, use parentCategory. If it's a parent, use item.category.
           const itemCategory = parentCategory || item.category;
+          const isRoot = parentIsRoot || item.isRootComment; // Check if item or parent is root
 
           if (!itemCategory) {
             console.error("Missing category for reaction!", item);
@@ -587,10 +596,18 @@
           
           if (isReply) {
             // Path for a reply's reaction
-            path = `comments/${itemCategory}/${parentId}/replies/${item.id}/reactions/${emoji}`;
+            if (isRoot) {
+              path = `comments/${parentId}/replies/${item.id}/reactions/${emoji}`;
+            } else {
+              path = `comments/${itemCategory}/${parentId}/replies/${item.id}/reactions/${emoji}`;
+            }
           } else {
             // Path for a parent comment's reaction
-            path = `comments/${itemCategory}/${item.id}/reactions/${emoji}`;
+            if (isRoot) {
+              path = `comments/${item.id}/reactions/${emoji}`;
+            } else {
+              path = `comments/${itemCategory}/${item.id}/reactions/${emoji}`;
+            }
           }
           // --- End Update ---
 
@@ -627,8 +644,8 @@
           .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
         replies.forEach((r) => {
-          // --- Updated: Pass parent's category to recursive call ---
-          repliesDiv.appendChild(createCommentElement(r, true, item.id, item.category));
+          // --- Updated: Pass parent's category and root flag to recursive call ---
+          repliesDiv.appendChild(createCommentElement(r, true, item.id, item.category, item.isRootComment));
         });
       }
 
@@ -640,4 +657,5 @@
   </script>
 </body>
 </html>
+
 
