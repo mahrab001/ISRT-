@@ -276,6 +276,7 @@
     </form>
 
     <hr />
+    <p style="text-align: center; font-size: 0.9em; color: #aaa; margin-top: -10px; margin-bottom: 20px;"><i>Previous Comments are stored in all comments section.</i></p>
     <h2>Previous Comments</h2>
     <div id="loading" style="text-align: center; margin: 20px 0;">Loading comments...</div>
     <div id="commentsContainer"><p class="empty-state">No comments yet. Be the first!</p></div>
@@ -451,7 +452,7 @@
         }
         // --- End New ---
         
-        // Sort by timestamp, descending. (Works for both cases)
+        // Sort by timestamp, descending. (Works for all cases)
         comments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
         // Render comments
@@ -633,6 +634,4 @@
   </script>
 </body>
 </html>
-
-
 
