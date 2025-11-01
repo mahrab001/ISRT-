@@ -8,13 +8,11 @@
   <style>
     /* ====== General Page Styling ====== */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter",
-        "Helvetica Neue", Arial, sans-serif;
+      font-family: Arial, sans-serif;
       background-color: #121212;
       color: #e0e0e0;
       line-height: 1.6;
       padding: 20px;
-      margin: 0;
     }
 
     .container {
@@ -22,18 +20,8 @@
       margin: 0 auto;
       background-color: #1e1e1e;
       padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    h1 {
-      text-align: center;
-      color: #58a6ff;
-      margin-top: 0;
-    }
-
-    p {
-      color: #b0b0b0;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
     }
 
     hr {
@@ -42,13 +30,188 @@
       margin: 20px 0;
     }
 
+    /* ====== Login/Register Screen ====== */
+    #welcomeContainer h2 {
+      text-align: center;
+      color: #4da3ff;
+    }
+    .warning-box {
+      background-color: #332a00;
+      border: 1px solid #ffcc00;
+      color: #ffcc00;
+      padding: 12px;
+      margin: 20px 0;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .form-toggle-tabs {
+      display: flex;
+      border-bottom: 2px solid #333;
+      margin-bottom: 20px;
+    }
+    .form-tab {
+      flex-grow: 1;
+      padding: 10px 15px;
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      color: #aaa;
+      font-size: 16px;
+      font-weight: bold;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .form-tab:hover {
+      color: #e0e0e0;
+    }
+    .form-tab.active {
+      color: #4da3ff;
+      border-bottom-color: #4da3ff;
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .auth-form input {
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background-color: #222;
+      color: #e0e0e0;
+      font-size: 16px;
+    }
+    .auth-form button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .auth-form button:hover {
+      background-color: #0056b3;
+    }
+    .auth-form button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    .auth-error {
+      color: #ff4d4d;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 1.2em;
+    }
+
+    /* ====== Header & Auth Styling ====== */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4da3ff;
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    #authStatus {
+      text-align: center;
+      font-size: 0.9em;
+      color: #aaa;
+    }
+    #userIdDisplay {
+      font-weight: bold;
+      color: #ddd;
+      font-family: monospace;
+      font-size: 1.1em;
+      word-break: break-all;
+    }
+    .logout-btn {
+      background: none;
+      border: 1px solid #ff4d4d;
+      color: #ff4d4d;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .logout-btn:hover {
+      background: #ff4d4d;
+      color: #fff;
+    }
+
+    /* ====== Notification Styling ====== */
+    .notification-bell {
+      position: relative;
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -10px;
+      background-color: #ff4d4d;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 12px;
+      font-weight: bold;
+      display: none; /* Hidden by default */
+    }
+    .notification-panel {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      display: none; /* Hidden by default */
+    }
+    .notification-panel-header {
+      padding: 10px 15px;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #4da3ff;
+      border-bottom: 1px solid #444;
+    }
+    .notification-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #333;
+      font-size: 14px;
+      color: #ccc;
+    }
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+    .notification-item strong {
+      color: #e0e0e0;
+    }
+    .notification-item-empty {
+      padding: 20px;
+      text-align: center;
+      color: #888;
+    }
+
     /* ====== Tabs Styling ====== */
     .tabs-container {
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
       border-bottom: 2px solid #333;
-      flex-wrap: wrap; /* Allow tabs to wrap on small screens */
+      flex-wrap: wrap;
     }
 
     .tab-btn {
@@ -58,41 +221,47 @@
       border: none;
       color: #aaa;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: bold;
       border-bottom: 3px solid transparent;
       transition: all 0.3s ease;
-      border-radius: 4px 4px 0 0;
     }
 
     .tab-btn:hover {
       color: #e0e0e0;
-      background-color: #2a2a2a;
     }
 
     .tab-btn.active {
-      color: #58a6ff;
-      border-bottom-color: #58a6ff;
+      color: #4da3ff;
+      border-bottom-color: #4da3ff;
     }
 
     /* ====== Comment Form ====== */
+    #commentForm {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    #commentForm.ready {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .form-warning {
+      font-size: 0.9em;
+      color: #ffcc00;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
     #commentForm textarea {
       width: 100%;
       box-sizing: border-box;
-      padding: 12px;
+      padding: 10px;
       border: 1px solid #444;
-      border-radius: 8px;
+      border-radius: 4px;
       resize: vertical;
       min-height: 80px;
       margin-bottom: 10px;
       background-color: #222;
       color: #e0e0e0;
-      font-size: 15px;
-    }
-
-    #commentForm textarea:focus {
-      outline: none;
-      border-color: #58a6ff;
-      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
     }
 
     #commentForm button {
@@ -100,120 +269,142 @@
       background-color: #007bff;
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: 4px;
+      padding: 10px;
       font-size: 16px;
-      font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease;
+      transition: background-color 0.3s ease;
     }
-
     #commentForm button:hover {
       background-color: #0056b3;
     }
-
-    #commentForm button:active {
-      transform: scale(0.98);
+    #commentForm button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
     }
 
     /* ====== Comments & Replies ====== */
     .comment-box,
     .reply-box {
       position: relative;
-      border: 1px solid #333;
-      padding: 12px 15px 45px 15px; /* Increased bottom padding for controls */
-      border-radius: 8px;
+      border: 2px solid #4da3ff;
+      padding: 10px 12px 35px 12px;
+      border-radius: 6px;
       margin-top: 12px;
-      background-color: #252525;
+      background-color: #181818;
     }
 
     .reply-box {
-      margin-left: 30px; /* Slightly reduced indent */
-      background-color: #282828;
-      border-color: #444;
+      margin-left: 40px;
+      border-color: #333;
     }
 
-    .comment-box p,
-    .reply-box p {
+    /* Style for username */
+    .comment-username {
+      color: #4da3ff;
+      font-size: 0.9em;
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+    
+    .comment-text {
       margin: 0 0 8px 0;
       font-size: 15px;
       color: #f5f5f5;
-      white-space: pre-wrap; /* Keeps line breaks */
+      white-space: pre-wrap;
       word-break: break-word;
+    }
+    /* Adjust text margin if username is present */
+    .comment-username + .comment-text {
+        margin-top: 0;
     }
 
     /* ====== Reaction and Reply Controls ====== */
     .controls {
-      position: absolute;
-      bottom: 8px;
-      left: 15px;
-      right: 15px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 10px;
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      right: 12px;
     }
 
     .reaction-options {
       display: flex;
       gap: 6px;
-      /* Ensure reactions are on the right */
-      margin-left: auto; 
     }
 
     .reaction {
       cursor: pointer;
-      font-size: 14px; /* Slightly smaller for a cleaner look */
-      transition: transform 0.2s, filter 0.2s;
+      font-size: 18px;
+      transition: transform 0.2s;
       user-select: none;
-      padding: 4px 6px;
-      border-radius: 10px;
-      background-color: #333;
     }
-
+    .reaction.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
     .reaction:hover {
-      transform: scale(1.2);
-      background-color: #444;
+      transform: scale(1.25);
     }
 
-    .reaction.reacted {
-      /* Placeholder for a "reacted" state */
-      background-color: #007bff;
-      color: #fff;
+    /* Container for Reply, Edit, Delete */
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-
+    .action-btn,
     .reply-btn {
       background: none;
       border: none;
       cursor: pointer;
       font-size: 14px;
-      font-weight: 600;
-      color: #58a6ff;
+      color: #4da3ff;
       transition: color 0.3s;
-      padding: 4px 0;
-      /* Ensure reply button is on the left */
-      margin-right: auto;
+      padding: 0;
     }
-
+    .action-btn:hover,
     .reply-btn:hover {
       color: #1e90ff;
+    }
+    .action-btn:disabled,
+    .reply-btn:disabled {
+      color: #555;
+      cursor: not-allowed;
+    }
+    
+    .action-btn.delete-btn,
+    .action-btn.confirm-delete-btn {
+      color: #ff4d4d;
+    }
+    .action-btn.delete-btn:hover,
+    .action-btn.confirm-delete-btn:hover {
+      color: #ff1a1a;
+    }
+    .action-btn.confirm-delete-btn {
+      font-weight: bold;
+      color: #ffcc00;
     }
 
     .replies {
       margin-top: 10px;
-      /* margin-left: 20px; Handled by reply-box margin */
     }
 
-    /* ====== Reply Form ====== */
-    .reply-form {
-      margin-top: 15px;
+    /* ====== Reply & Edit Forms ====== */
+    .reply-form,
+    .edit-form {
+      margin-top: 10px;
       background-color: #202020;
       border: 1px solid #333;
       border-radius: 6px;
       padding: 10px;
     }
 
-    .reply-form textarea {
+    .reply-form textarea,
+    .edit-form textarea {
       width: 100%;
       box-sizing: border-box;
       border: 1px solid #555;
@@ -225,12 +416,8 @@
       color: #e0e0e0;
     }
 
-    .reply-form textarea:focus {
-      outline: none;
-      border-color: #58a6ff;
-    }
-
-    .reply-form button {
+    .reply-form button,
+    .edit-form button {
       background-color: #007bff;
       color: white;
       border: none;
@@ -241,9 +428,25 @@
       font-size: 14px;
       transition: background-color 0.3s ease;
     }
-
-    .reply-form button:hover {
+    .reply-form button:hover,
+    .edit-form button:hover {
       background-color: #0056b3;
+    }
+    .reply-form button:disabled,
+    .edit-form button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    
+    .edit-form .form-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .edit-form .cancel-edit-btn {
+      background-color: #555;
+    }
+    .edit-form .cancel-edit-btn:hover {
+      background-color: #666;
     }
 
     /* ====== Loading/Empty State ====== */
@@ -252,19 +455,142 @@
       text-align: center;
       color: #bbb;
       font-style: italic;
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #222;
-      border-radius: 8px;
+      margin-top: 20px;
     }
+    
+    /* ====== What's New Modal ====== */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background-color: #1e1e1e;
+      border: 1px solid #444;
+      padding: 25px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    }
+    .modal-content h2 {
+      color: #4da3ff;
+      margin-top: 0;
+    }
+    .modal-content ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .modal-content li {
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .modal-content li strong {
+      color: #e0e0e0;
+      margin-right: 8px;
+    }
+    .modal-close-btn {
+      display: block;
+      width: 100%;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+    }
+    .modal-close-btn:hover {
+      background-color: #0056b3;
+    }
+    
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Anonymous ISRT Feedback ✍️</h1>
-    <p>Write a comment about ISRT without sharing any personal details. All comments are anonymous.</p>
 
+  <!-- What's New Modal (Hidden by default) -->
+  <div id="whatsNewModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+      <h2>Welcome Back! Here's What's New:</h2>
+      <ul>
+        <li><strong>✏️ Edit & 🗑️ Delete:</strong> You can now edit and delete your own comments and replies.</li>
+        <li><strong>🔔 Notifications:</strong> Get notified when someone reacts or replies to your post. (Click the bell icon!)</li>
+        <li><strong>👤 Accounts:</strong> Your comments are now tied to your anonymous account, so you can manage them.</li>
+      </ul>
+      <p style="color: #aaa; font-size: 0.9em;">This message will only show once.</p>
+      <button id="closeModalBtn" class="modal-close-btn">Got it!</button>
+    </div>
+  </div>
+  
+  <!-- Login/Register Container (Hidden by default) -->
+  <div id="welcomeContainer" class="container" style="display: none;">
+    <h2>Welcome to Anonymous ISRT Feedback</h2>
+    <p style="text-align: center; color: #aaa;">Please create an account or log in to continue.</p>
+    
+    <!-- Warning Message -->
+    <div class="warning-box">
+      <strong>Warning:</strong> For anonymity, please choose a unique username that is not tied to your real identity. Do not share any personal details.
+    </div>
+
+    <!-- Login/Register Forms -->
+    <div class="form-toggle-tabs">
+      <button id="showLoginTab" class="form-tab active"  type="button">Login</button>
+      <button id="showRegisterTab" class="form-tab"  type="button">Register</button>
+    </div>
+
+    <p id="authError" class="auth-error"></p>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="auth-form">
+      <input type="text" id="loginUsername" placeholder="Anonymous Username" required>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button type="submit" id="loginButton">Login</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="registerForm" class="auth-form" style="display: none;">
+      <input type="text" id="registerUsername" placeholder="Anonymous Username" required>
+      <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required>
+      <button type="submit" id="registerButton">Create Account</button>
+    </form>
+  </div>
+
+  <!-- Main App Container (Hidden by default) -->
+  <div id="mainAppContainer" class="container" style="display: none;">
+    <div class="header-container">
+      <h1>Anonymous ISRT Feedback ✍️</h1>
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <!-- Notification Bell -->
+        <div id="notificationBell" class="notification-bell">
+          <span>🔔</span>
+          <span id="notificationBadge" class="notification-badge"></span>
+        </div>
+        <!-- Logout Button -->
+        <button id="logoutButton" class="logout-btn" title="Logout">Logout</button>
+      </div>
+    </div>
+    
+    <div id="authStatus">Loading...</div>
+    
+    <!-- Notification Panel (Hidden) -->
+    <div id="notificationPanel" class="notification-panel">
+      <div class="notification-panel-header">Notifications</div>
+      <div id="notificationList">
+        <div class="notification-item-empty">No notifications yet.</div>
+      </div>
+    </div>
+
+    <p>Write a comment about ISRT without sharing any personal details. All comments are anonymous.</p>
     <p style="text-align: center; font-size: 1.1em; color: #c0c0c0; margin-bottom: 10px;">Share your thoughts about</p>
 
     <div id="tabsContainer" class="tabs-container">
@@ -275,9 +601,14 @@
       <button class="tab-btn" data-category="all">All Comments</button>
     </div>
 
+    <!-- Form is now disabled by default -->
     <form id="commentForm">
-      <textarea id="commentText" placeholder="Your anonymous comment here..." required></textarea>
-      <button type="submit" id="submitButton">Submit Anonymous Comment</button>
+      <textarea id="commentText" placeholder="Your anonymous comment here..." required disabled></textarea>
+      <!-- Persistent Warning -->
+      <div class="form-warning">
+        <strong>Warning:</strong> Do not share any personal details.
+      </div>
+      <button type="submit" id="submitButton" disabled>Submit Comment</button>
     </form>
 
     <hr />
@@ -292,14 +623,28 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import {
       getDatabase,
-      ref,
+      ref as dbRef,
       push,
       onValue,
       update,
       off,
+      serverTimestamp,
+      set,
+      get,
+      child,
+      remove // Import remove for delete
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    
+    // --- Import Firebase Auth Services ---
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    // --- Firebase Configuration (from script.js) ---
+    // --- Firebase Configuration ---
     const firebaseConfig = {
       apiKey: "AIzaSyBi0DtNzX0niHbV4LtId7PaxLoD8Pphy6U",
       authDomain: "comment-on-isrt-8a634.firebaseapp.com",
@@ -313,11 +658,18 @@
     // --- Initialize Firebase ---
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app); 
 
     // --- Global State ---
     let currentCategory = 'general';
-    let currentCommentsRef = null; // To store the current DB reference
+    let currentCommentsRef = null; 
     const reactions = ["👍", "😂", "😍", "😢", "😮", "😡", "😀"];
+    let currentUserId = null; 
+    let currentUsername = null; // Store the user's chosen username
+    let authReady = false; 
+    let notificationListenerRef = null; 
+    const FAKE_EMAIL_DOMAIN = "@isrt-feedback.com"; // Our fake domain
+    const WHATS_NEW_VERSION = 'v1.1'; // Change this to show modal again
 
     // --- DOM Elements ---
     const commentForm = document.getElementById("commentForm");
@@ -326,92 +678,381 @@
     const commentsContainer = document.getElementById("commentsContainer");
     const tabsContainer = document.getElementById("tabsContainer");
     const loadingElement = document.getElementById("loading");
+    const authStatus = document.getElementById("authStatus");
+    const notificationBell = document.getElementById("notificationBell");
+    const notificationBadge = document.getElementById("notificationBadge");
+    const notificationPanel = document.getElementById("notificationPanel");
+    const notificationList = document.getElementById("notificationList");
 
-    // --- Event Listeners ---
+    // Auth/Welcome DOM Elements
+    const welcomeContainer = document.getElementById("welcomeContainer");
+    const mainAppContainer = document.getElementById("mainAppContainer");
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const loginButton = document.getElementById("loginButton");
+    const registerButton = document.getElementById("registerButton");
+    const showLoginTab = document.getElementById("showLoginTab");
+    const showRegisterTab = document.getElementById("showRegisterTab");
+    const authError = document.getElementById("authError");
+    const logoutButton = document.getElementById("logoutButton");
+    
+    // Modal DOM Elements
+    const whatsNewModal = document.getElementById("whatsNewModal");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    
+    // --- Auth Form Toggle ---
+    showLoginTab.addEventListener("click", () => {
+      loginForm.style.display = "block";
+      registerForm.style.display = "none";
+      showLoginTab.classList.add("active");
+      showRegisterTab.classList.remove("active");
+      authError.textContent = "";
+    });
+    
+    showRegisterTab.addEventListener("click", () => {
+      loginForm.style.display = "none";
+      registerForm.style.display = "block";
+      showLoginTab.classList.remove("active");
+      showRegisterTab.classList.add("active");
+      authError.textContent = "";
+    });
+    
+    // --- Register Logic ---
+    registerForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const username = document.getElementById("registerUsername").value.trim().toLowerCase();
+      const password = document.getElementById("registerPassword").value;
+      const email = username + FAKE_EMAIL_DOMAIN; // Create fake email
 
-    /**
-     * Handle Tab Switching
-     */
+      if (!username || !password) {
+        authError.textContent = "Please fill in all fields.";
+        return;
+      }
+      if (username.includes(" ") || username.includes("@") || username.length < 3) {
+        authError.textContent = "Username must be 3+ characters and have no spaces or '@'.";
+        return;
+      }
+
+      registerButton.disabled = true;
+      registerButton.textContent = "Creating...";
+      authError.textContent = "";
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          // Signed in, now save username to database
+          const userId = userCredential.user.uid;
+          set(dbRef(db, `users/${userId}`), {
+            username: username
+          }).then(() => {
+             // onAuthStateChanged will handle the rest
+          });
+        })
+        .catch((error) => {
+          authError.textContent = getAuthErrorMessage(error.code);
+        })
+        .finally(() => {
+          registerButton.disabled = false;
+          registerButton.textContent = "Create Account";
+        });
+    });
+
+    // --- Login Logic ---
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const username = document.getElementById("loginUsername").value.trim().toLowerCase();
+      const password = document.getElementById("loginPassword").value;
+      const email = username + FAKE_EMAIL_DOMAIN; // Create fake email
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Logging in...";
+      authError.textContent = "";
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          // Signed in, onAuthStateChanged will handle the rest
+        })
+        .catch((error) => {
+          authError.textContent = getAuthErrorMessage(error.code);
+        })
+        .finally(() => {
+          loginButton.disabled = false;
+          loginButton.textContent = "Login";
+        });
+    });
+    
+    // --- Logout Logic ---
+    logoutButton.addEventListener("click", () => {
+      signOut(auth).catch(error => {
+        console.error("Logout Error:", error);
+      });
+    });
+
+    // --- "What's New" Modal Close Button ---
+    closeModalBtn.addEventListener('click', () => {
+      whatsNewModal.style.display = 'none';
+      welcomeContainer.style.display = "block"; // Show login screen
+      try {
+        localStorage.setItem('seenWhatsNew', WHATS_NEW_VERSION);
+      } catch (e) {
+         console.warn("Could not save to localStorage.");
+      }
+    });
+
+    // --- Authentication State Manager ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        currentUserId = user.uid;
+        authReady = true;
+
+        // Get the user's real username from the database
+        get(child(dbRef(db), `users/${currentUserId}/username`)).then((snapshot) => {
+          if (snapshot.exists()) {
+            currentUsername = snapshot.val();
+          } else {
+            // Fallback: extract from email if DB entry is missing
+            currentUsername = user.email.split('@')[0];
+          }
+          authStatus.innerHTML = `Logged in as: <span id="userIdDisplay">${currentUsername}</span>`;
+        });
+        
+        // Show main app, hide login and modal
+        mainAppContainer.style.display = "block";
+        welcomeContainer.style.display = "none";
+        whatsNewModal.style.display = "none"; // Hide modal on login
+
+        // Enable forms
+        commentForm.classList.add("ready");
+        commentText.disabled = false;
+        submitButton.disabled = false;
+        
+        loadComments();
+        listenForNotifications(currentUserId);
+
+      } else {
+        // User is signed out
+        currentUserId = null;
+        currentUsername = null;
+        authReady = false;
+
+        // Hide main app
+        mainAppContainer.style.display = "none";
+        
+        // Detach listeners
+        if (currentCommentsRef) off(currentCommentsRef);
+        if (notificationListenerRef) off(notificationListenerRef);
+        commentsContainer.innerHTML = "<p class='empty-state'>Please log in to see comments.</p>";
+        notificationList.innerHTML = '<div class="notification-item-empty">Please log in.</div>';
+        notificationBadge.style.display = 'none';
+        
+        // Disable forms
+        commentForm.classList.remove("ready");
+        commentText.disabled = true;
+        submitButton.disabled = true;
+        
+        // User is signed out. Decide to show modal or login.
+        try {
+          const hasSeenModal = localStorage.getItem('seenWhatsNew');
+          if (hasSeenModal !== WHATS_NEW_VERSION) {
+            // Not seen modal: Show modal, hide login
+            whatsNewModal.style.display = 'flex';
+            welcomeContainer.style.display = 'none';
+          } else {
+            // Already seen modal: Hide modal, show login
+            whatsNewModal.style.display = 'none';
+            welcomeContainer.style.display = 'block';
+          }
+        } catch (e) {
+          console.warn("Could not access localStorage. Showing login.");
+          welcomeContainer.style.display = 'block';
+        }
+      }
+    });
+    
+    // --- Notification Logic ---
+    notificationBell.addEventListener("click", () => {
+      const panelOpen = notificationPanel.style.display === "block";
+      if (panelOpen) {
+        notificationPanel.style.display = "none";
+      } else {
+        notificationPanel.style.display = "block";
+        // Mark notifications as read when panel is opened
+        markNotificationsAsRead(currentUserId);
+      }
+    });
+    
+    // Close panel if clicking outside
+    document.addEventListener('click', (event) => {
+      if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target) && event.target !== logoutButton) {
+        notificationPanel.style.display = 'none';
+      }
+    });
+
+    function listenForNotifications(userId) {
+      if (notificationListenerRef) {
+        off(notificationListenerRef);
+      }
+      notificationListenerRef = dbRef(db, `notifications/${userId}`);
+      
+      onValue(notificationListenerRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          notificationList.innerHTML = '<div class="notification-item-empty">No notifications yet.</div>';
+          notificationBadge.style.display = 'none';
+          return;
+        }
+        
+        const allNotifications = Object.entries(data)
+          .map(([id, notif]) => ({ id, ...notif }))
+          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        let unreadCount = 0;
+        notificationList.innerHTML = '';
+        
+        allNotifications.forEach(notif => {
+          if (!notif.read) {
+            unreadCount++;
+          }
+          const itemEl = document.createElement('div');
+          itemEl.classList.add('notification-item');
+          
+          let content = '';
+          if (notif.type === 'reply') {
+            content = `Someone replied: "<strong>${truncate(notif.replyText, 40)}</strong>" to your comment.`;
+          } else if (notif.type === 'reaction') {
+            content = `Someone reacted with <strong>${notif.reaction}</strong> to your comment.`;
+          }
+          itemEl.innerHTML = content;
+          notificationList.appendChild(itemEl);
+        });
+
+        if (unreadCount > 0) {
+          notificationBadge.textContent = unreadCount;
+          notificationBadge.style.display = 'block';
+        } else {
+          notificationBadge.style.display = 'none';
+        }
+      });
+    }
+
+    function createNotification(targetUserId, type, originalItem, content) {
+      if (!targetUserId || targetUserId === currentUserId) {
+        return; // Don't notify self
+      }
+
+      const notificationsRef = dbRef(db, `notifications/${targetUserId}`);
+      const notification = {
+        type: type,
+        commentText: truncate(originalItem.text, 50),
+        timestamp: serverTimestamp(),
+        read: false,
+      };
+
+      if (type === 'reply') {
+        notification.replyText = content;
+      } else if (type === 'reaction') {
+        notification.reaction = content;
+      }
+
+      push(notificationsRef, notification);
+    }
+
+    function markNotificationsAsRead(userId) {
+      const notifsRef = dbRef(db, `notifications/${userId}`);
+      get(notifsRef).then((snapshot) => { // Use get() for a one-time read
+        const data = snapshot.val();
+        if (!data) return;
+        
+        const updates = {};
+        Object.entries(data).forEach(([id, notif]) => {
+          if (!notif.read) {
+            updates[`notifications/${userId}/${id}/read`] = true;
+          }
+        });
+
+        if (Object.keys(updates).length > 0) {
+          update(dbRef(db), updates);
+        }
+      });
+    }
+    
+    function truncate(str, n) {
+        return (str.length > n) ? str.slice(0, n-1) + '...' : str;
+    }
+
+    // --- Tab Switching Logic ---
     tabsContainer.addEventListener("click", (e) => {
       if (!e.target.classList.contains("tab-btn")) return;
-
       const newCategory = e.target.dataset.category;
       if (newCategory === currentCategory) return;
 
-      // --- New: Show/Hide comment form based on tab ---
       if (newCategory === 'all') {
         commentForm.style.display = 'none';
       } else {
         commentForm.style.display = 'block';
       }
-      // --- End New ---
 
       tabsContainer.querySelector(".active").classList.remove("active");
       e.target.classList.add("active");
       currentCategory = newCategory;
       
-      loadComments();
+      if (authReady) loadComments();
     });
 
-    /**
-     * Handle New Comment Submission
-     */
-    commentForm.addEventListener("submit", (e) => {
+    // --- Comment Submission ---
+    commentForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const text = commentText.value.trim();
-      if (!text) return;
+      if (!text || !authReady) return;
 
       submitButton.disabled = true;
       submitButton.textContent = "Submitting...";
 
-      const comment = {
-        text,
-        category: currentCategory, // Store the actual category
-        timestamp: Date.now(),
-        reactions: {},
-        replies: {},
-      };
-
       try {
-        // Get a DB ref based on the current category
-        // This works because the form is hidden when currentCategory === 'all'
-        const commentsRef = ref(db, `comments/${currentCategory}`);
-        push(commentsRef, comment);
+        const comment = {
+          text,
+          userId: currentUserId, 
+          username: currentUsername, // Save the username
+          category: currentCategory, 
+          timestamp: serverTimestamp(), 
+          reactions: {},
+          replies: {},
+        };
+
+        const commentsRef = dbRef(db, `comments/${currentCategory}`);
+        await push(commentsRef, comment);
+        
         commentText.value = "";
       } catch (error) {
         console.error("Error adding comment: ", error);
       } finally {
         submitButton.disabled = false;
-        submitButton.textContent = "Submit Anonymous Comment";
+        submitButton.textContent = "Submit Comment";
       }
     });
 
     /**
-     * Load Comments for the Current Category
+     * Load Comments
      */
     function loadComments() {
-      console.log(`Loading comments for: ${currentCategory}`);
+      if (!authReady) return; 
+
       commentsContainer.innerHTML = "";
       loadingElement.style.display = "block";
 
-      // Detach the old listener, if one exists
       if (currentCommentsRef) {
-        console.log("Detaching previous listener.");
         off(currentCommentsRef);
         currentCommentsRef = null;
       }
 
-      // --- New: Create ref for 'all' or a specific category ---
       let newRef;
       if (currentCategory === 'all') {
-        newRef = ref(db, 'comments'); // Listen to the root 'comments' node
+        newRef = dbRef(db, 'comments'); 
       } else {
-        newRef = ref(db, `comments/${currentCategory}`); // Listen to specific category
+        newRef = dbRef(db, `comments/${currentCategory}`); 
       }
       currentCommentsRef = newRef;
-      // --- End New ---
 
-      // Attach the new real-time listener
       onValue(currentCommentsRef, (snapshot) => {
         loadingElement.style.display = "none";
         const data = snapshot.val();
@@ -421,49 +1062,42 @@
           return;
         }
 
-        // --- New: Process data for 'all' or a single category ---
         const comments = [];
         if (currentCategory === 'all') {
-          // New aggregation logic for 'all' tab
-          const allNodes = data; // This is the root 'comments' node
+          const allNodes = data;
           Object.entries(allNodes).forEach(([key, value]) => {
-            if (value && typeof value.text === 'string' && typeof value.timestamp === 'number') {
-              // This is a single, top-level (old) comment.
-              // We check for 'text' and 'timestamp' to be sure.
+            if (value && (typeof value.text === 'string') && (value.timestamp)) {
+              // This is a root-level (old) comment
               comments.push({ 
                 id: key, 
                 ...value, 
-                category: value.category || 'general', // Default old comments to 'general'
-                isRootComment: true // Add flag for old comments
+                category: 'general', // Assign to 'general' for reply/reaction logic
+                isRootComment: true 
               });
             } else if (value && typeof value === 'object') {
-              // This is a category node (e.g., 'seniors', 'juniors')
+              // This is a category folder
               const categoryName = key;
               const commentsInCategory = value;
               Object.entries(commentsInCategory).forEach(([commentId, commentData]) => {
-                // This is a comment from within a category
                 comments.push({ 
                   id: commentId, 
                   ...commentData, 
-                  category: categoryName, // The category is the key
-                  isRootComment: false // Add flag for new comments
+                  category: categoryName, 
+                  isRootComment: false 
                 });
               });
             }
           });
         } else {
-          // Standard logic for a single category
+          // We are in a specific category tab
           Object.entries(data).forEach(([id, c]) => {
-            comments.push({ id, ...c, isRootComment: false }); // Explicitly set root flag
+            comments.push({ id, ...c, isRootComment: false }); 
           });
         }
-        // --- End New ---
         
-        // Sort by timestamp, descending. (Works for all cases)
         comments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        // Render comments
-        commentsContainer.innerHTML = ""; // Clear for re-render
+        commentsContainer.innerHTML = ""; 
         comments.forEach((c) => {
           const el = createCommentElement(c, false, null);
           commentsContainer.appendChild(el);
@@ -478,47 +1112,59 @@
 
     /**
      * Creates the DOM element for a single comment or reply.
-     * @param {object} item - The comment or reply object from RTDB.
-     * @param {boolean} isReply - True if this is a reply.
-     * @param {string | null} parentId - The ID of the parent comment (if it's a reply).
-     * @param {string | null} parentCategory - The category of the parent comment.
-     * @param {boolean} parentIsRoot - True if the parent comment is a root-level comment.
      */
     function createCommentElement(item, isReply = false, parentId = null, parentCategory = null, parentIsRoot = false) {
       const box = document.createElement("div");
       box.classList.add(isReply ? "reply-box" : "comment-box");
       box.dataset.id = item.id;
 
-      const text = document.createElement("p");
-      text.textContent = item.text;
-      box.appendChild(text);
+      // Display Username (if it exists)
+      if (item.username) {
+        const usernameEl = document.createElement("strong");
+        usernameEl.textContent = item.username;
+        usernameEl.classList.add("comment-username");
+        box.appendChild(usernameEl);
+      }
 
+      // Main content
+      const textEl = document.createElement("p");
+      textEl.textContent = item.text || "";
+      textEl.classList.add("comment-text");
+      box.appendChild(textEl);
+      
       const controls = document.createElement("div");
       controls.classList.add("controls");
+      
+      // Left side: Reply/Edit/Delete
+      const actionButtons = document.createElement("div");
+      actionButtons.classList.add("action-buttons");
 
       let replyForm = null;
+      let editForm = null;
 
-      // --- Reply Button & Form (for parent comments only) ---
-      // --- Updated: Only show reply button if NOT a reply AND NOT in 'all' category ---
+      // --- Reply Button (show if not reply AND not on 'all' tab) ---
       if (!isReply && currentCategory !== 'all') {
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "💬 Reply";
         replyBtn.classList.add("reply-btn");
-        controls.appendChild(replyBtn);
-
+        if (!authReady) replyBtn.disabled = true; // Disable if not logged in
+        actionButtons.appendChild(replyBtn);
+        
         replyForm = document.createElement("form");
         replyForm.classList.add("reply-form");
         replyForm.style.display = "none";
 
         const replyInput = document.createElement("textarea");
         replyInput.placeholder = "Write a reply...";
+        
         const replySubmit = document.createElement("button");
         replySubmit.type = "submit";
         replySubmit.textContent = "Post Reply";
 
         replyForm.appendChild(replyInput);
         replyForm.appendChild(replySubmit);
-
+        box.appendChild(replyForm); 
+        
         replyBtn.addEventListener("click", (e) => {
           if (e.target.closest('.reaction')) {
             e.preventDefault();
@@ -527,9 +1173,15 @@
           }
           e.preventDefault();
           e.stopPropagation();
+          // Hide all other open forms in this box
+          if (editForm) editForm.style.display = 'none';
+          textEl.style.display = 'block';
+
+          // Hide all other open reply forms
           document.querySelectorAll('.reply-form').forEach(f => {
               if (f !== replyForm) f.style.display = 'none';
           });
+          // Toggle this form
           const isOpen = replyForm.style.display === "block";
           replyForm.style.display = isOpen ? "none" : "block";
           if (!isOpen) {
@@ -537,39 +1189,179 @@
           }
         });
 
-        replyForm.addEventListener("submit", (e) => {
+        // --- Handle Reply Submission ---
+        replyForm.addEventListener("submit", async (e) => {
           e.preventDefault();
           const replyText = replyInput.value.trim();
-          if (!replyText) return;
+          if (!replyText || !authReady) return; 
 
           replySubmit.disabled = true;
-          
-          const reply = {
-            text: replyText,
-            timestamp: Date.now(),
-            reactions: {},
-          };
+          replySubmit.textContent = "Posting...";
 
           try {
-            // --- Updated: Use item.category and isRootComment to post reply to correct path ---
+            const reply = {
+              text: replyText,
+              userId: currentUserId,
+              username: currentUsername, // Add username to reply
+              timestamp: serverTimestamp(),
+              reactions: {},
+            };
+            
+            // Determine the correct path to save the reply
             let repliesRef;
             if (item.isRootComment) {
-              repliesRef = ref(db, `comments/${item.id}/replies`);
+              repliesRef = dbRef(db, `comments/${item.id}/replies`);
             } else {
-              repliesRef = ref(db, `comments/${item.category}/${item.id}/replies`);
+              repliesRef = dbRef(db, `comments/${item.category}/${item.id}/replies`);
             }
-            push(repliesRef, reply);
+            await push(repliesRef, reply);
+
+            // Send notification to parent comment author
+            createNotification(item.userId, "reply", item, replyText);
+
             replyInput.value = "";
             replyForm.style.display = "none";
+
           } catch (error) {
             console.error("Error adding reply: ", error);
           } finally {
             replySubmit.disabled = false;
+            replySubmit.textContent = "Post Reply";
           }
         });
       }
 
-      // --- Reaction Buttons (for all items) ---
+      // --- Edit & Delete Buttons (show if user is author) ---
+      if (authReady && item.userId === currentUserId) {
+        
+        // --- Edit Button ---
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️";
+        editBtn.title = "Edit";
+        editBtn.classList.add("action-btn", "edit-btn");
+        actionButtons.appendChild(editBtn);
+        
+        // --- Delete Button ---
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.title = "Delete";
+        deleteBtn.classList.add("action-btn", "delete-btn");
+        actionButtons.appendChild(deleteBtn);
+
+        // --- Edit Form (hidden) ---
+        editForm = document.createElement("form");
+        editForm.classList.add("edit-form");
+        editForm.style.display = "none";
+        
+        const editInput = document.createElement("textarea");
+        editInput.value = item.text;
+        
+        const editActions = document.createElement("div");
+        editActions.classList.add("form-actions");
+
+        const editSubmit = document.createElement("button");
+        editSubmit.type = "submit";
+        editSubmit.textContent = "Save";
+        
+        const editCancel = document.createElement("button");
+        editCancel.type = "button";
+        editCancel.textContent = "Cancel";
+        editCancel.classList.add("cancel-edit-btn");
+        
+        editActions.appendChild(editSubmit);
+        editActions.appendChild(editCancel);
+        editForm.appendChild(editInput);
+        editForm.appendChild(editActions);
+        box.appendChild(editForm);
+
+        // Edit button click
+        editBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Hide reply form if open
+          if (replyForm) replyForm.style.display = 'none';
+          
+          // Toggle edit form
+          const isEditing = editForm.style.display === 'block';
+          if (isEditing) {
+            editForm.style.display = 'none';
+            textEl.style.display = 'block';
+          } else {
+            editForm.style.display = 'block';
+            textEl.style.display = 'none';
+            editInput.focus();
+          }
+        });
+        
+        // Cancel edit
+        editCancel.addEventListener("click", () => {
+          editForm.style.display = 'none';
+          textEl.style.display = 'block';
+        });
+        
+        // Submit edit
+        editForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const newText = editInput.value.trim();
+          if (!newText || newText === item.text) {
+            editForm.style.display = 'none';
+            textEl.style.display = 'block';
+            return;
+          }
+
+          editSubmit.disabled = true;
+          editSubmit.textContent = "Saving...";
+
+          // Find the correct path to update
+          const path = getItemPath(item, isReply, parentId, parentCategory, parentIsRoot);
+          
+          try {
+            await update(dbRef(db, path), { text: newText });
+            textEl.textContent = newText; // Update UI
+          } catch (error) {
+            console.error("Error updating item: ", error);
+          } finally {
+            editSubmit.disabled = false;
+            editSubmit.textContent = "Save";
+            editForm.style.display = 'none';
+            textEl.style.display = 'block';
+          }
+        });
+
+        // --- Delete Button Logic ---
+        deleteBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          
+          // Show confirmation
+          if (deleteBtn.textContent === "🗑️") {
+            deleteBtn.textContent = "Confirm?";
+            deleteBtn.classList.add("confirm-delete-btn");
+            // Reset after 3 seconds
+            setTimeout(() => {
+              deleteBtn.textContent = "🗑️";
+              deleteBtn.classList.remove("confirm-delete-btn");
+            }, 3000);
+          } else {
+            // On second click (Confirm)
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = "Deleting...";
+
+            const path = getItemPath(item, isReply, parentId, parentCategory, parentIsRoot);
+            
+            try {
+              remove(dbRef(db, path));
+              // The onValue listener will automatically remove the element from the UI
+            } catch (error) {
+              console.error("Error deleting item: ", error);
+              deleteBtn.disabled = false;
+              deleteBtn.textContent = "Error!";
+            }
+          }
+        });
+      }
+
+      controls.appendChild(actionButtons);
+
+      // --- Reaction Buttons (Right side) ---
       const reactionContainer = document.createElement("div");
       reactionContainer.classList.add("reaction-options");
 
@@ -578,46 +1370,25 @@
         const count = item.reactions?.[emoji] || 0;
         span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
         span.classList.add("reaction");
+        if (!authReady) span.classList.add("disabled"); // Disable if not logged in
 
         span.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopImmediatePropagation();
+          if (!authReady) return;
           
-          // --- Updated: Determine correct category for reaction path ---
-          let path;
-          // If it's a reply, use parentCategory. If it's a parent, use item.category.
-          const itemCategory = parentCategory || item.category;
-          const isRoot = parentIsRoot || item.isRootComment; // Check if item or parent is root
-
-          if (!itemCategory) {
-            console.error("Missing category for reaction!", item);
-            return; // Safety check
-          }
+          const path = getItemPath(item, isReply, parentId, parentCategory, parentIsRoot);
+          const reactionPath = `${path}/reactions/${emoji}`;
           
-          if (isReply) {
-            // Path for a reply's reaction
-            if (isRoot) {
-              path = `comments/${parentId}/replies/${item.id}/reactions/${emoji}`;
-            } else {
-              path = `comments/${itemCategory}/${parentId}/replies/${item.id}/reactions/${emoji}`;
-            }
-          } else {
-            // Path for a parent comment's reaction
-            if (isRoot) {
-              path = `comments/${item.id}/reactions/${emoji}`;
-            } else {
-              path = `comments/${itemCategory}/${item.id}/reactions/${emoji}`;
-            }
-          }
-          // --- End Update ---
-
           const newCount = (item.reactions?.[emoji] || 0) + 1;
           
           try {
-            update(ref(db), { [path]: newCount });
-            // The onValue listener will update this, but for instant
-            // feedback, we can update the text content locally.
+            update(dbRef(db), { [reactionPath]: newCount });
             span.textContent = `${emoji} ${newCount}`;
+            
+            // Send notification
+            createNotification(item.userId, "reaction", item, emoji);
+
           } catch (error) {
             console.error("Error updating reaction: ", error);
           }
@@ -627,33 +1398,65 @@
       });
       
       controls.appendChild(reactionContainer);
-      box.appendChild(controls);
-      if (replyForm) box.appendChild(replyForm);
+      box.appendChild(controls); 
 
-      // --- Render Replies (for parent comments only) ---
-      // This works because the main onValue listener gets the entire object
-      // including the 'replies' node.
+      // --- Render Replies ---
       if (!isReply && item.replies) {
         const repliesDiv = document.createElement("div");
         repliesDiv.classList.add("replies");
         box.appendChild(repliesDiv);
 
-        // Sort replies by timestamp, ascending
         const replies = Object.entries(item.replies)
           .map(([id, r]) => ({ id, ...r }))
           .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
         replies.forEach((r) => {
-          // --- Updated: Pass parent's category and root flag to recursive call ---
+          // Pass down parent info
           repliesDiv.appendChild(createCommentElement(r, true, item.id, item.category, item.isRootComment));
         });
       }
 
       return box;
     }
+    
+    /**
+     * Helper to get the correct DB path for an item
+     */
+    function getItemPath(item, isReply, parentId, parentCategory, parentIsRoot) {
+      const itemCategory = parentCategory || item.category;
+      const isRoot = parentIsRoot || item.isRootComment;
+      
+      if (isReply) {
+        if (isRoot) {
+          return `comments/${parentId}/replies/${item.id}`;
+        } else {
+          return `comments/${itemCategory}/${parentId}/replies/${item.id}`;
+        }
+      } else {
+        if (isRoot) {
+          return `comments/${item.id}`;
+        } else {
+          return `comments/${itemCategory}/${item.id}`;
+        }
+      }
+    }
 
-    // Initial load
-    loadComments();
+    // --- Auth Error Helper ---
+    function getAuthErrorMessage(code) {
+      switch (code) {
+        case 'auth/invalid-email':
+          return 'Please enter a valid username (no spaces or @).';
+        case 'auth/weak-password':
+          return 'Password must be at least 6 characters long.';
+        case 'auth/email-already-in-use':
+          return 'This username is already taken. Please try another.';
+        case 'auth/invalid-credential':
+          return 'Invalid username or password.';
+        default:
+          console.error("Unhandled auth error:", code);
+          return 'An unknown error occurred. Please try again.';
+      }
+    }
   </script>
 </body>
 </html>
