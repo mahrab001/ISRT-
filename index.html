@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anonymous ISRT Feedback ✍️</title>
-  
+  <title>Anonymous Feedback ✍️</title>
+
   <style>
     /* ====== General Page Styling ====== */
     body {
@@ -13,6 +13,7 @@
       color: #e0e0e0;
       line-height: 1.6;
       padding: 20px;
+      margin: 0;
     }
 
     .container {
@@ -24,181 +25,179 @@
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
     }
 
+    h1, h2 {
+      text-align: center;
+      color: #4da3ff;
+    }
+    
+    h1 {
+      margin-top: 0;
+    }
+
     hr {
-      border: 0;
-      border-top: 1px solid #333;
-      margin: 20px 0;
+      border: 1px solid #333;
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+
+    p {
+      text-align: center;
+      margin-top: 0;
+      color: #bbb;
+    }
+    
+    .note {
+      text-align: center;
+      color: #bbb;
+      font-style: italic;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    
+    .warning-text {
+      color: #ffcc00;
+      font-weight: bold;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 10px;
     }
 
     /* ====== Login/Register Screen ====== */
-    #welcomeContainer h2 {
+    #welcomeScreen {
+      background-color: #1e1e1e;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
       text-align: center;
-      color: #4da3ff;
     }
-    .warning-box {
-      background-color: #332a00;
-      border: 1px solid #ffcc00;
-      color: #ffcc00;
+    
+    #welcomeScreen h1 {
+      margin-top: 0;
+    }
+
+    .login-form input {
+      width: 90%;
       padding: 12px;
-      margin: 20px 0;
-      border-radius: 6px;
-      text-align: center;
-    }
-    .form-toggle-tabs {
-      display: flex;
-      border-bottom: 2px solid #333;
-      margin-bottom: 20px;
-    }
-    .form-tab {
-      flex-grow: 1;
-      padding: 10px 15px;
-      cursor: pointer;
-      background-color: transparent;
-      border: none;
-      color: #aaa;
-      font-size: 16px;
-      font-weight: bold;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s ease;
-    }
-    .form-tab:hover {
-      color: #e0e0e0;
-    }
-    .form-tab.active {
-      color: #4da3ff;
-      border-bottom-color: #4da3ff;
-    }
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    .auth-form input {
-      padding: 10px;
+      margin-bottom: 15px;
       border: 1px solid #444;
       border-radius: 4px;
       background-color: #222;
       color: #e0e0e0;
       font-size: 16px;
     }
-    .auth-form button {
+
+    .login-form button {
       background-color: #007bff;
       color: #fff;
       border: none;
       border-radius: 4px;
-      padding: 10px;
+      padding: 12px 20px;
       font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s ease;
-    }
-    .auth-form button:hover {
-      background-color: #0056b3;
-    }
-    .auth-form button:disabled {
-      background-color: #555;
-      cursor: not-allowed;
-    }
-    .auth-error {
-      color: #ff4d4d;
-      text-align: center;
-      margin-top: 10px;
-      min-height: 1.2em;
+      margin: 5px;
     }
 
-    /* ====== Header & Auth Styling ====== */
-    .header-container {
+    .login-form button:hover {
+      background-color: #0056b3;
+    }
+    
+    #authError {
+      color: #ff4d4d;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    /* ====== Header / Auth Status ====== */
+    .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      text-align: center;
-      color: #4da3ff;
-      margin: 0;
-      flex-grow: 1;
+      padding: 5px 10px;
+      background-color: #2a2a2a;
+      border-radius: 6px;
+      margin-bottom: 20px;
     }
 
     #authStatus {
-      text-align: center;
-      font-size: 0.9em;
+      font-size: 14px;
       color: #aaa;
     }
-    #userIdDisplay {
-      font-weight: bold;
-      color: #ddd;
-      font-family: monospace;
-      font-size: 1.1em;
-      word-break: break-all;
-    }
-    .logout-btn {
-      background: none;
-      border: 1px solid #ff4d4d;
-      color: #ff4d4d;
-      padding: 5px 10px;
+
+    #logoutButton {
+      background: #c9302c;
+      color: white;
+      border: none;
+      padding: 6px 10px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s ease;
+      font-size: 13px;
+      transition: background-color 0.3s;
     }
-    .logout-btn:hover {
-      background: #ff4d4d;
+    
+    #logoutButton:hover {
+      background: #a92a26;
+    }
+
+    /* ====== Notification System ====== */
+    .notifications {
+      position: relative;
+    }
+
+    #notificationBell {
+      font-size: 24px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #aaa;
+      position: relative;
+    }
+    
+    #notificationBell:hover {
       color: #fff;
     }
 
-    /* ====== Notification Styling ====== */
-    .notification-bell {
-      position: relative;
-      font-size: 24px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .notification-badge {
+    #notificationDot {
       position: absolute;
-      top: -5px;
-      right: -10px;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
       background-color: #ff4d4d;
-      color: white;
       border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 12px;
-      font-weight: bold;
       display: none; /* Hidden by default */
     }
-    .notification-panel {
+
+    #notificationPanel {
       position: absolute;
-      top: 50px;
-      right: 20px;
-      background-color: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 6px;
-      width: 320px;
+      top: 40px;
+      right: 0;
+      width: 300px;
       max-height: 400px;
       overflow-y: auto;
+      background-color: #2c2c2c;
+      border: 1px solid #444;
+      border-radius: 6px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
       z-index: 100;
       display: none; /* Hidden by default */
     }
-    .notification-panel-header {
-      padding: 10px 15px;
-      font-size: 1.1em;
-      font-weight: bold;
-      color: #4da3ff;
-      border-bottom: 1px solid #444;
-    }
+    
     .notification-item {
-      padding: 12px 15px;
-      border-bottom: 1px solid #333;
+      padding: 12px;
+      border-bottom: 1px solid #444;
+      color: #ddd;
       font-size: 14px;
-      color: #ccc;
     }
+    
     .notification-item:last-child {
       border-bottom: none;
     }
-    .notification-item strong {
-      color: #e0e0e0;
+    
+    .notification-item.unread {
+      background-color: #3a3a3a;
     }
+    
     .notification-item-empty {
       padding: 20px;
       text-align: center;
@@ -208,10 +207,10 @@
     /* ====== Tabs Styling ====== */
     .tabs-container {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 20px;
       border-bottom: 2px solid #333;
-      flex-wrap: wrap;
     }
 
     .tab-btn {
@@ -237,20 +236,9 @@
 
     /* ====== Comment Form ====== */
     #commentForm {
-      opacity: 0.5;
-      pointer-events: none;
+      margin-bottom: 20px;
     }
-    #commentForm.ready {
-      opacity: 1;
-      pointer-events: all;
-    }
-    .form-warning {
-      font-size: 0.9em;
-      color: #ffcc00;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
+    
     #commentForm textarea {
       width: 100%;
       box-sizing: border-box;
@@ -262,6 +250,11 @@
       margin-bottom: 10px;
       background-color: #222;
       color: #e0e0e0;
+    }
+    
+    #commentForm textarea:disabled {
+      background-color: #2a2a2a;
+      cursor: not-allowed;
     }
 
     #commentForm button {
@@ -275,12 +268,37 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
+
     #commentForm button:hover {
       background-color: #0056b3;
     }
+    
     #commentForm button:disabled {
-      background-color: #555;
+      background-color: #004a9a;
       cursor: not-allowed;
+    }
+    
+    /* ====== Sort Controls ====== */
+    .sort-controls {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    
+    .sort-controls label {
+      font-size: 14px;
+      color: #aaa;
+    }
+    
+    #sortControl {
+      background-color: #2a2a2a;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 14px;
     }
 
     /* ====== Comments & Replies ====== */
@@ -288,7 +306,7 @@
     .reply-box {
       position: relative;
       border: 2px solid #4da3ff;
-      padding: 10px 12px 35px 12px;
+      padding: 10px 12px 12px 12px;
       border-radius: 6px;
       margin-top: 12px;
       background-color: #181818;
@@ -296,42 +314,65 @@
 
     .reply-box {
       margin-left: 40px;
-      border-color: #333;
-    }
-
-    /* Style for username */
-    .comment-username {
-      color: #4da3ff;
-      font-size: 0.9em;
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: block;
+      border-color: #555;
     }
     
-    .comment-text {
+    .author-line {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    
+    .comment-author {
+      font-weight: bold;
+      color: #aaa;
+      font-size: 13px;
+      display: inline; /* Changed */
+    }
+    
+    .comment-timestamp {
+      font-size: 12px;
+      color: #888;
+      margin-left: 8px;
+      display: inline;
+    }
+    
+    .comment-author.admin {
+      color: #FFD700; /* Golden color */
+      font-weight: bold;
+      text-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+    }
+    
+    .comment-author.tuntun {
+      color: #ff4d4d; /* Red color */
+      font-weight: bold;
+      text-shadow: 0 0 4px rgba(255, 77, 77, 0.5);
+    }
+
+    .comment-box p,
+    .reply-box p {
       margin: 0 0 8px 0;
       font-size: 15px;
       color: #f5f5f5;
       white-space: pre-wrap;
-      word-break: break-word;
-    }
-    /* Adjust text margin if username is present */
-    .comment-username + .comment-text {
-        margin-top: 0;
+      text-align: left; /* <-- Added this line */
     }
 
     /* ====== Reaction and Reply Controls ====== */
     .controls {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      position: absolute;
-      bottom: 8px;
-      left: 12px;
-      right: 12px;
+      justify-content: flex-start;
+      gap: 15px;
+      margin-top: 10px;
+      position: relative;
+      min-height: 30px; /* Ensure space for reactions */
     }
 
     .reaction-options {
+      position: absolute;
+      right: 0;
+      bottom: 0;
       display: flex;
       gap: 6px;
     }
@@ -341,23 +382,18 @@
       font-size: 18px;
       transition: transform 0.2s;
       user-select: none;
+      padding: 2px 4px;
+      border-radius: 4px;
     }
-    .reaction.disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
+    
     .reaction:hover {
       transform: scale(1.25);
+      background-color: #333;
     }
 
-    /* Container for Reply, Edit, Delete */
-    .action-buttons {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .action-btn,
-    .reply-btn {
+    .reply-btn,
+    .edit-btn,
+    .delete-btn {
       background: none;
       border: none;
       cursor: pointer;
@@ -366,34 +402,32 @@
       transition: color 0.3s;
       padding: 0;
     }
-    .action-btn:hover,
-    .reply-btn:hover {
+    
+    .edit-btn, .delete-btn {
+      font-size: 18px;
+      color: #aaa;
+    }
+
+    .reply-btn:hover,
+    .edit-btn:hover,
+    .delete-btn:hover {
       color: #1e90ff;
     }
-    .action-btn:disabled,
-    .reply-btn:disabled {
-      color: #555;
-      cursor: not-allowed;
-    }
     
-    .action-btn.delete-btn,
-    .action-btn.confirm-delete-btn {
+    .delete-btn:hover {
       color: #ff4d4d;
     }
-    .action-btn.delete-btn:hover,
-    .action-btn.confirm-delete-btn:hover {
-      color: #ff1a1a;
-    }
-    .action-btn.confirm-delete-btn {
+    
+    .delete-btn.confirm {
+      color: #ff4d4d;
       font-weight: bold;
-      color: #ffcc00;
     }
 
     .replies {
       margin-top: 10px;
+      margin-left: 20px;
     }
 
-    /* ====== Reply & Edit Forms ====== */
     .reply-form,
     .edit-form {
       margin-top: 10px;
@@ -427,172 +461,173 @@
       cursor: pointer;
       font-size: 14px;
       transition: background-color 0.3s ease;
+      margin-right: 5px;
     }
+    
+    .edit-form button.cancel-btn {
+      background-color: #555;
+    }
+
     .reply-form button:hover,
     .edit-form button:hover {
       background-color: #0056b3;
     }
-    .reply-form button:disabled,
-    .edit-form button:disabled {
-      background-color: #555;
-      cursor: not-allowed;
-    }
     
-    .edit-form .form-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .edit-form .cancel-edit-btn {
-      background-color: #555;
-    }
-    .edit-form .cancel-edit-btn:hover {
-      background-color: #666;
+    .edit-form button.cancel-btn:hover {
+      background-color: #444;
     }
 
-    /* ====== Loading/Empty State ====== */
-    #commentsContainer .empty-state,
-    #loading {
+    #commentsContainer .empty-message {
       text-align: center;
       color: #bbb;
       font-style: italic;
       margin-top: 20px;
     }
     
-    /* ====== What's New Modal ====== */
-    .modal-backdrop {
+    /* ====== Modal ("What's New") Styling ====== */
+    .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
+    
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
     .modal-content {
-      background-color: #1e1e1e;
-      border: 1px solid #444;
-      padding: 25px;
+      background: #2a2a2a;
+      padding: 30px;
       border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
       width: 90%;
       max-width: 500px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      text-align: left;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
     }
+    
+    .modal-overlay.show .modal-content {
+      transform: scale(1);
+    }
+
     .modal-content h2 {
+      text-align: center;
       color: #4da3ff;
       margin-top: 0;
     }
+    
     .modal-content ul {
-      list-style: none;
+      list-style-type: none;
       padding-left: 0;
     }
+    
     .modal-content li {
-      margin-bottom: 12px;
+      margin-bottom: 15px;
       font-size: 16px;
+      color: #ddd;
     }
+    
     .modal-content li strong {
-      color: #e0e0e0;
-      margin-right: 8px;
+      color: #4da3ff;
+      display: block;
+      font-size: 17px;
     }
-    .modal-close-btn {
+    
+    .modal-content button {
       display: block;
       width: 100%;
+      margin-top: 20px;
       background-color: #007bff;
       color: #fff;
       border: none;
       border-radius: 4px;
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      margin-top: 20px;
-    }
-    .modal-close-btn:hover {
-      background-color: #0056b3;
     }
     
+    .modal-content button:hover {
+      background-color: #0056b3;
+    }
   </style>
 </head>
 
 <body>
-
-  <!-- What's New Modal (Hidden by default) -->
-  <div id="whatsNewModal" class="modal-backdrop" style="display: none;">
+  <!-- "What's New" Modal -->
+  <div id="whatsNewModal" class="modal-overlay">
     <div class="modal-content">
-      <h2>Welcome Back! Here's What's New:</h2>
+      <h2>🎉 What's New? 🎉</h2>
       <ul>
-        <li><strong>✏️ Edit & 🗑️ Delete:</strong> You can now edit and delete your own comments and replies.</li>
-        <li><strong>🔔 Notifications:</strong> Get notified when someone reacts or replies to your post. (Click the bell icon!)</li>
-        <li><strong>👤 Accounts:</strong> Your comments are now tied to your anonymous account, so you can manage them.</li>
+        <li>
+          <strong>User Accounts:</strong>
+          You can now create a secure, anonymous account with a username and password to post.
+        </li>
+        <li>
+          <strong>Edit & Delete:</strong>
+          You have full control! You can now edit or delete any of your own comments and replies.
+        </li>
+        <li>
+          <strong>Notifications:</strong>
+          Click the 🔔 bell icon to see when someone reacts or replies to your posts.
+        </li>
       </ul>
-      <p style="color: #aaa; font-size: 0.9em;">This message will only show once.</p>
-      <button id="closeModalBtn" class="modal-close-btn">Got it!</button>
+      <button id="closeModalButton">Got it!</button>
     </div>
   </div>
-  
-  <!-- Login/Register Container (Hidden by default) -->
-  <div id="welcomeContainer" class="container" style="display: none;">
-    <h2>Welcome to Anonymous ISRT Feedback</h2>
-    <p style="text-align: center; color: #aaa;">Please create an account or log in to continue.</p>
+
+  <!-- Login/Register Screen -->
+  <div id="welcomeScreen">
+    <h1>Welcome to ISRT Feedback</h1>
+    <p>Please log in or register to continue.</p>
+    <div class="warning-text" style="font-size: 16px; margin-bottom: 20px;">
+      Warning: For anonymity, do not use a personal or identifying username.
+      Do not share any personal details.
+    </div>
     
-    <!-- Warning Message -->
-    <div class="warning-box">
-      <strong>Warning:</strong> For anonymity, please choose a unique username that is not tied to your real identity. Do not share any personal details.
-    </div>
-
-    <!-- Login/Register Forms -->
-    <div class="form-toggle-tabs">
-      <button id="showLoginTab" class="form-tab active"  type="button">Login</button>
-      <button id="showRegisterTab" class="form-tab"  type="button">Register</button>
-    </div>
-
-    <p id="authError" class="auth-error"></p>
-
-    <!-- Login Form -->
-    <form id="loginForm" class="auth-form">
-      <input type="text" id="loginUsername" placeholder="Anonymous Username" required>
-      <input type="password" id="loginPassword" placeholder="Password" required>
+    <form class="login-form" id="loginForm">
+      <input type="text" id="usernameInput" placeholder="Username" required>
+      <input type="password" id="passwordInput" placeholder="Password" required>
+      <div id="authError"></div>
       <button type="submit" id="loginButton">Login</button>
-    </form>
-
-    <!-- Register Form -->
-    <form id="registerForm" class="auth-form" style="display: none;">
-      <input type="text" id="registerUsername" placeholder="Anonymous Username" required>
-      <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required>
-      <button type="submit" id="registerButton">Create Account</button>
+      <button type="submit" id="registerButton">Register</button>
     </form>
   </div>
 
   <!-- Main App Container (Hidden by default) -->
-  <div id="mainAppContainer" class="container" style="display: none;">
-    <div class="header-container">
-      <h1>Anonymous ISRT Feedback ✍️</h1>
-      <div style="display: flex; align-items: center; gap: 20px;">
-        <!-- Notification Bell -->
-        <div id="notificationBell" class="notification-bell">
-          <span>🔔</span>
-          <span id="notificationBadge" class="notification-badge"></span>
+  <div class="container" id="mainApp" style="display: none;">
+    <div class="header-bar">
+      <div id="authStatus">Loading...</div>
+      <div class="notifications">
+        <button id="notificationBell">
+          🔔
+          <span id="notificationDot"></span>
+        </button>
+        <div id="notificationPanel">
+          <div id="notificationList">
+            <div class="notification-item-empty">No notifications yet.</div>
+          </div>
         </div>
-        <!-- Logout Button -->
-        <button id="logoutButton" class="logout-btn" title="Logout">Logout</button>
       </div>
+      <button id="logoutButton">Logout</button>
     </div>
     
-    <div id="authStatus">Loading...</div>
-    
-    <!-- Notification Panel (Hidden) -->
-    <div id="notificationPanel" class="notification-panel">
-      <div class="notification-panel-header">Notifications</div>
-      <div id="notificationList">
-        <div class="notification-item-empty">No notifications yet.</div>
-      </div>
-    </div>
+    <h1>Anonymous Feedback ✍️</h1>
+    <p>Share your thoughts. All comments are anonymous.</p>
 
-    <p>Write a comment about ISRT without sharing any personal details. All comments are anonymous.</p>
-    <p style="text-align: center; font-size: 1.1em; color: #c0c0c0; margin-bottom: 10px;">Share your thoughts about</p>
-
+    <p style="font-size: 16px; color: #ccc; margin-top: 20px; margin-bottom: 10px;">Share your thoughts about</p>
     <div id="tabsContainer" class="tabs-container">
       <button class="tab-btn active" data-category="general">General</button>
       <button class="tab-btn" data-category="seniors">Seniors</button>
@@ -601,50 +636,61 @@
       <button class="tab-btn" data-category="all">All Comments</button>
     </div>
 
-    <!-- Form is now disabled by default -->
     <form id="commentForm">
-      <textarea id="commentText" placeholder="Your anonymous comment here..." required disabled></textarea>
-      <!-- Persistent Warning -->
-      <div class="form-warning">
-        <strong>Warning:</strong> Do not share any personal details.
+      <textarea id="commentText" placeholder="Your comment here..." required disabled></textarea>
+      <div class="warning-text">
+        Warning: Do not share any personal details.
       </div>
-      <button type="submit" id="submitButton" disabled>Submit Comment</button>
+      <button type="submit" id="commentSubmitButton" disabled>Submit Comment</button>
     </form>
 
     <hr />
-    <p style="text-align: center; font-size: 0.9em; color: #aaa; margin-top: -10px; margin-bottom: 20px;"><i>Previous Comments are stored in all comments section.</i></p>
+    <p class="note">Previous Comments are stored in all comments section.</p>
     <h2>Previous Comments</h2>
-    <div id="loading" style="text-align: center; margin: 20px 0;">Loading comments...</div>
-    <div id="commentsContainer"><p class="empty-state">No comments yet. Be the first!</p></div>
+    
+    <!-- NEW: Sort Controls -->
+    <div class="sort-controls">
+      <label for="sortControl">Sort by: </label>
+      <select id="sortControl">
+        <option value="newest">Newest</option>
+        <option value="mostReacted">Most Reacted</option>
+      </select>
+    </div>
+    
+    <div id="loading" style="display: none; text-align: center; margin: 20px 0;">Loading comments...</div>
+    <div id="commentsContainer"><p class="empty-message">No comments yet. Be the first!</p></div>
   </div>
 
   <script type="module">
-    // --- Import Firebase RTDB Services ---
+    // =============================
+    // Import Firebase SDKs
+    // =============================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import {
-      getDatabase,
-      ref as dbRef,
-      push,
-      onValue,
-      update,
-      off,
-      serverTimestamp,
-      set,
-      get,
-      child,
-      remove // Import remove for delete
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-    
-    // --- Import Firebase Auth Services ---
     import {
       getAuth,
       onAuthStateChanged,
       createUserWithEmailAndPassword,
       signInWithEmailAndPassword,
-      signOut
+      signOut,
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      push,
+      onValue,
+      update,
+      set,
+      serverTimestamp,
+      remove,
+      off,
+      query,
+      orderByChild,
+      equalTo,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-    // --- Firebase Configuration ---
+    // =============================
+    // Firebase Configuration
+    // =============================
     const firebaseConfig = {
       apiKey: "AIzaSyBi0DtNzX0niHbV4LtId7PaxLoD8Pphy6U",
       authDomain: "comment-on-isrt-8a634.firebaseapp.com",
@@ -655,809 +701,734 @@
       appId: "1:173989173917:web:613693b2c98c4c121e9274",
     };
 
-    // --- Initialize Firebase ---
+    // =============================
+    // Initialize Firebase
+    // =============================
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app); 
+    const auth = getAuth(app);
 
-    // --- Global State ---
+    // =============================
+    // Global State
+    // =============================
     let currentCategory = 'general';
-    let currentCommentsRef = null; 
+    let currentSort = 'newest'; // NEW: Sort state
+    let currentCommentsRef = null;
+    let currentUserId = null;
+    let currentUsername = null;
+    let notificationListener = null;
     const reactions = ["👍", "😂", "😍", "😢", "😮", "😡", "😀"];
-    let currentUserId = null; 
-    let currentUsername = null; // Store the user's chosen username
-    let authReady = false; 
-    let notificationListenerRef = null; 
-    const FAKE_EMAIL_DOMAIN = "@isrt-feedback.com"; // Our fake domain
-    const WHATS_NEW_VERSION = 'v1.1'; // Change this to show modal again
+    const WHATS_NEW_KEY = 'whatsNewModalSeen_v1';
 
-    // --- DOM Elements ---
+    // =============================
+    // DOM Elements
+    // =============================
     const commentForm = document.getElementById("commentForm");
     const commentText = document.getElementById("commentText");
-    const submitButton = document.getElementById("submitButton");
+    const commentSubmitButton = document.getElementById("commentSubmitButton");
     const commentsContainer = document.getElementById("commentsContainer");
     const tabsContainer = document.getElementById("tabsContainer");
     const loadingElement = document.getElementById("loading");
-    const authStatus = document.getElementById("authStatus");
-    const notificationBell = document.getElementById("notificationBell");
-    const notificationBadge = document.getElementById("notificationBadge");
-    const notificationPanel = document.getElementById("notificationPanel");
-    const notificationList = document.getElementById("notificationList");
+    const sortControl = document.getElementById("sortControl"); // NEW: Sort element
 
-    // Auth/Welcome DOM Elements
-    const welcomeContainer = document.getElementById("welcomeContainer");
-    const mainAppContainer = document.getElementById("mainAppContainer");
+    // --- Auth Elements ---
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    const mainApp = document.getElementById("mainApp");
     const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
+    const usernameInput = document.getElementById("usernameInput");
+    const passwordInput = document.getElementById("passwordInput");
     const loginButton = document.getElementById("loginButton");
     const registerButton = document.getElementById("registerButton");
-    const showLoginTab = document.getElementById("showLoginTab");
-    const showRegisterTab = document.getElementById("showRegisterTab");
     const authError = document.getElementById("authError");
+    const authStatus = document.getElementById("authStatus");
     const logoutButton = document.getElementById("logoutButton");
     
-    // Modal DOM Elements
+    // --- Notification Elements ---
+    const notificationBell = document.getElementById("notificationBell");
+    const notificationDot = document.getElementById("notificationDot");
+    const notificationPanel = document.getElementById("notificationPanel");
+    const notificationList = document.getElementById("notificationList");
+    
+    // --- Modal Elements ---
     const whatsNewModal = document.getElementById("whatsNewModal");
-    const closeModalBtn = document.getElementById("closeModalBtn");
+    const closeModalButton = document.getElementById("closeModalButton");
+
+    // =============================
+    // Utility Functions (NEW)
+    // =============================
     
-    // --- Auth Form Toggle ---
-    showLoginTab.addEventListener("click", () => {
-      loginForm.style.display = "block";
-      registerForm.style.display = "none";
-      showLoginTab.classList.add("active");
-      showRegisterTab.classList.remove("active");
-      authError.textContent = "";
-    });
+    /**
+     * Calculates total reactions for a comment.
+     */
+    function getTotalReactions(comment) {
+      if (!comment.reactions) return 0;
+      return Object.values(comment.reactions).reduce((sum, count) => sum + (count || 0), 0);
+    }
+
+    /**
+     * Converts a timestamp to relative time string.
+     */
+    function timeAgo(timestamp) {
+      if (!timestamp) return '...';
+      const now = Date.now();
+      const seconds = Math.floor((now - timestamp) / 1000);
+
+      let interval = seconds / 31536000; // years
+      if (interval > 1) return Math.floor(interval) + "y ago";
+      interval = seconds / 2592000; // months
+      if (interval > 1) return Math.floor(interval) + "mo ago";
+      interval = seconds / 86400; // days
+      if (interval > 1) return Math.floor(interval) + "d ago";
+      interval = seconds / 3600; // hours
+      if (interval > 1) return Math.floor(interval) + "h ago";
+      interval = seconds / 60; // minutes
+      if (interval > 1) return Math.floor(interval) + "m ago";
+      if (seconds < 10) return "just now";
+      return Math.floor(seconds) + "s ago";
+    }
+
+    // =============================
+    // "What's New" Modal Logic
+    // =============================
+    function showModal() {
+      whatsNewModal.classList.add("show");
+    }
     
-    showRegisterTab.addEventListener("click", () => {
-      loginForm.style.display = "none";
-      registerForm.style.display = "block";
-      showLoginTab.classList.remove("active");
-      showRegisterTab.classList.add("active");
-      authError.textContent = "";
-    });
-    
-    // --- Register Logic ---
-    registerForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const username = document.getElementById("registerUsername").value.trim().toLowerCase();
-      const password = document.getElementById("registerPassword").value;
-      const email = username + FAKE_EMAIL_DOMAIN; // Create fake email
+    function hideModal() {
+      whatsNewModal.classList.remove("show");
+    }
 
-      if (!username || !password) {
-        authError.textContent = "Please fill in all fields.";
-        return;
-      }
-      if (username.includes(" ") || username.includes("@") || username.length < 3) {
-        authError.textContent = "Username must be 3+ characters and have no spaces or '@'.";
-        return;
-      }
-
-      registerButton.disabled = true;
-      registerButton.textContent = "Creating...";
-      authError.textContent = "";
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          // Signed in, now save username to database
-          const userId = userCredential.user.uid;
-          set(dbRef(db, `users/${userId}`), {
-            username: username
-          }).then(() => {
-             // onAuthStateChanged will handle the rest
-          });
-        })
-        .catch((error) => {
-          authError.textContent = getAuthErrorMessage(error.code);
-        })
-        .finally(() => {
-          registerButton.disabled = false;
-          registerButton.textContent = "Create Account";
-        });
-    });
-
-    // --- Login Logic ---
-    loginForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const username = document.getElementById("loginUsername").value.trim().toLowerCase();
-      const password = document.getElementById("loginPassword").value;
-      const email = username + FAKE_EMAIL_DOMAIN; // Create fake email
-
-      loginButton.disabled = true;
-      loginButton.textContent = "Logging in...";
-      authError.textContent = "";
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          // Signed in, onAuthStateChanged will handle the rest
-        })
-        .catch((error) => {
-          authError.textContent = getAuthErrorMessage(error.code);
-        })
-        .finally(() => {
-          loginButton.disabled = false;
-          loginButton.textContent = "Login";
-        });
-    });
-    
-    // --- Logout Logic ---
-    logoutButton.addEventListener("click", () => {
-      signOut(auth).catch(error => {
-        console.error("Logout Error:", error);
-      });
-    });
-
-    // --- "What's New" Modal Close Button ---
-    closeModalBtn.addEventListener('click', () => {
-      whatsNewModal.style.display = 'none';
-      welcomeContainer.style.display = "block"; // Show login screen
-      try {
-        localStorage.setItem('seenWhatsNew', WHATS_NEW_VERSION);
-      } catch (e) {
-         console.warn("Could not save to localStorage.");
+    closeModalButton.addEventListener("click", () => {
+      localStorage.setItem(WHATS_NEW_KEY, 'true');
+      hideModal();
+      // Show login screen only if user is not logged in
+      if (!currentUserId) {
+        welcomeScreen.style.display = "block";
       }
     });
 
-    // --- Authentication State Manager ---
+    // =============================
+    // Authentication
+    // =============================
+
+    // Listen for auth state changes
     onAuthStateChanged(auth, (user) => {
+      // First, check if modal should be shown
+      const hasSeenModal = localStorage.getItem(WHATS_NEW_KEY);
+      if (!hasSeenModal) {
+        showModal();
+        // Hide login screen while modal is shown
+        welcomeScreen.style.display = "none";
+      }
+
       if (user) {
         // User is signed in
         currentUserId = user.uid;
-        authReady = true;
-
-        // Get the user's real username from the database
-        get(child(dbRef(db), `users/${currentUserId}/username`)).then((snapshot) => {
-          if (snapshot.exists()) {
-            currentUsername = snapshot.val();
-          } else {
-            // Fallback: extract from email if DB entry is missing
-            currentUsername = user.email.split('@')[0];
-          }
-          authStatus.innerHTML = `Logged in as: <span id="userIdDisplay">${currentUsername}</span>`;
-        });
         
-        // Show main app, hide login and modal
-        mainAppContainer.style.display = "block";
-        welcomeContainer.style.display = "none";
-        whatsNewModal.style.display = "none"; // Hide modal on login
+        // Fetch username from DB
+        const userRef = ref(db, `users/${currentUserId}/username`);
+        onValue(userRef, (snapshot) => {
+          currentUsername = snapshot.val();
+          authStatus.textContent = `Logged in as: ${currentUsername || 'Guest'}`;
+          
+          // Enable forms and load data
+          commentText.disabled = false;
+          commentSubmitButton.disabled = false;
+          welcomeScreen.style.display = "none";
+          mainApp.style.display = "block";
+          
+          loadComments();
+          setupNotificationListener();
 
-        // Enable forms
-        commentForm.classList.add("ready");
-        commentText.disabled = false;
-        submitButton.disabled = false;
-        
-        loadComments();
-        listenForNotifications(currentUserId);
+        }, { onlyOnce: true }); // Only need this once on login
 
       } else {
         // User is signed out
         currentUserId = null;
         currentUsername = null;
-        authReady = false;
-
-        // Hide main app
-        mainAppContainer.style.display = "none";
         
-        // Detach listeners
-        if (currentCommentsRef) off(currentCommentsRef);
-        if (notificationListenerRef) off(notificationListenerRef);
-        commentsContainer.innerHTML = "<p class='empty-state'>Please log in to see comments.</p>";
-        notificationList.innerHTML = '<div class="notification-item-empty">Please log in.</div>';
-        notificationBadge.style.display = 'none';
-        
-        // Disable forms
-        commentForm.classList.remove("ready");
+        // Disable forms and show login screen
+        authStatus.textContent = "Not logged in.";
         commentText.disabled = true;
-        submitButton.disabled = true;
+        commentSubmitButton.disabled = true;
+        mainApp.style.display = "none";
         
-        // User is signed out. Decide to show modal or login.
-        try {
-          const hasSeenModal = localStorage.getItem('seenWhatsNew');
-          if (hasSeenModal !== WHATS_NEW_VERSION) {
-            // Not seen modal: Show modal, hide login
-            whatsNewModal.style.display = 'flex';
-            welcomeContainer.style.display = 'none';
-          } else {
-            // Already seen modal: Hide modal, show login
-            whatsNewModal.style.display = 'none';
-            welcomeContainer.style.display = 'block';
-          }
-        } catch (e) {
-          console.warn("Could not access localStorage. Showing login.");
-          welcomeContainer.style.display = 'block';
+        // Only show login screen if modal is *not* active
+        if (hasSeenModal) {
+          welcomeScreen.style.display = "block";
         }
+        
+        // Clean up listeners
+        if (currentCommentsRef) off(currentCommentsRef);
+        if (notificationListener) off(notificationListener);
+        commentsContainer.innerHTML = '<p class="empty-message">Please log in to see comments.</p>';
+        notificationList.innerHTML = '<div class="notification-item-empty">Please log in.</div>';
+        notificationDot.style.display = "none";
       }
     });
+
+    // Handle Login
+    loginButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      authError.textContent = "";
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      const email = `${username.toLowerCase()}@isrt-feedback.com`;
+      
+      signInWithEmailAndPassword(auth, email, password)
+        .catch((error) => {
+          console.error("Login failed:", error);
+          if (error.code === 'auth/invalid-credential') {
+             authError.textContent = "Invalid username or password.";
+          } else {
+             authError.textContent = "Login failed. Please try again.";
+          }
+        });
+    });
+
+    // Handle Register
+    registerButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      authError.textContent = "";
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      
+      if (username.length < 3) {
+        authError.textContent = "Username must be at least 3 characters.";
+        return;
+      }
+      if (password.length < 6) {
+        authError.textContent = "Password must be at least 6 characters.";
+        return;
+      }
+      
+      const email = `${username.toLowerCase()}@isrt-feedback.com`;
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          // Now, save the username to the database
+          const userRef = ref(db, `users/${userCredential.user.uid}`);
+          set(userRef, {
+            username: username
+          });
+          // Auth state change will handle the rest
+        })
+        .catch((error) => {
+          console.error("Registration failed:", error);
+          if (error.code === 'auth/email-already-in-use') {
+            authError.textContent = "This username is already taken.";
+          } else {
+            authError.textContent = "Registration failed. Please try again.";
+          }
+        });
+    });
+
+    // Handle Logout
+    logoutButton.addEventListener("click", () => {
+      signOut(auth);
+    });
+
+    // =============================
+    // Notification System
+    // =============================
     
-    // --- Notification Logic ---
     notificationBell.addEventListener("click", () => {
-      const panelOpen = notificationPanel.style.display === "block";
-      if (panelOpen) {
-        notificationPanel.style.display = "none";
-      } else {
-        notificationPanel.style.display = "block";
-        // Mark notifications as read when panel is opened
-        markNotificationsAsRead(currentUserId);
+      const isPanelOpen = notificationPanel.style.display === 'block';
+      notificationPanel.style.display = isPanelOpen ? 'none' : 'block';
+      
+      // If opening, mark notifications as read
+      if (!isPanelOpen) {
+        notificationDot.style.display = 'none';
+        markNotificationsAsRead();
       }
     });
     
     // Close panel if clicking outside
-    document.addEventListener('click', (event) => {
-      if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target) && event.target !== logoutButton) {
+    document.addEventListener('click', (e) => {
+      if (!notificationBell.contains(e.target) && !notificationPanel.contains(e.target)) {
         notificationPanel.style.display = 'none';
       }
     });
-
-    function listenForNotifications(userId) {
-      if (notificationListenerRef) {
-        off(notificationListenerRef);
-      }
-      notificationListenerRef = dbRef(db, `notifications/${userId}`);
+    
+    function setupNotificationListener() {
+      if (notificationListener) off(notificationListener);
       
-      onValue(notificationListenerRef, (snapshot) => {
+      const notificationsRef = query(ref(db, `notifications/${currentUserId}`), orderByChild('timestamp'));
+      notificationListener = onValue(notificationsRef, (snapshot) => {
+        notificationList.innerHTML = '';
         const data = snapshot.val();
+        let hasUnread = false;
+        
         if (!data) {
           notificationList.innerHTML = '<div class="notification-item-empty">No notifications yet.</div>';
-          notificationBadge.style.display = 'none';
+          notificationDot.style.display = 'none';
           return;
         }
         
-        const allNotifications = Object.entries(data)
-          .map(([id, notif]) => ({ id, ...notif }))
-          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-        let unreadCount = 0;
-        notificationList.innerHTML = '';
-        
-        allNotifications.forEach(notif => {
-          if (!notif.read) {
-            unreadCount++;
-          }
-          const itemEl = document.createElement('div');
-          itemEl.classList.add('notification-item');
+        const notifications = Object.entries(data)
+          .map(([id, n]) => ({ id, ...n }))
+          .sort((a, b) => b.timestamp - a.timestamp); // Sort by newest first
           
-          let content = '';
-          if (notif.type === 'reply') {
-            content = `Someone replied: "<strong>${truncate(notif.replyText, 40)}</strong>" to your comment.`;
-          } else if (notif.type === 'reaction') {
-            content = `Someone reacted with <strong>${notif.reaction}</strong> to your comment.`;
+        notifications.forEach(n => {
+          const el = document.createElement('div');
+          el.classList.add('notification-item');
+          if (n.unread) {
+            el.classList.add('unread');
+            hasUnread = true;
           }
-          itemEl.innerHTML = content;
-          notificationList.appendChild(itemEl);
+          el.textContent = n.text;
+          notificationList.appendChild(el);
         });
-
-        if (unreadCount > 0) {
-          notificationBadge.textContent = unreadCount;
-          notificationBadge.style.display = 'block';
-        } else {
-          notificationBadge.style.display = 'none';
-        }
-      });
-    }
-
-    function createNotification(targetUserId, type, originalItem, content) {
-      if (!targetUserId || targetUserId === currentUserId) {
-        return; // Don't notify self
-      }
-
-      const notificationsRef = dbRef(db, `notifications/${targetUserId}`);
-      const notification = {
-        type: type,
-        commentText: truncate(originalItem.text, 50),
-        timestamp: serverTimestamp(),
-        read: false,
-      };
-
-      if (type === 'reply') {
-        notification.replyText = content;
-      } else if (type === 'reaction') {
-        notification.reaction = content;
-      }
-
-      push(notificationsRef, notification);
-    }
-
-    function markNotificationsAsRead(userId) {
-      const notifsRef = dbRef(db, `notifications/${userId}`);
-      get(notifsRef).then((snapshot) => { // Use get() for a one-time read
-        const data = snapshot.val();
-        if (!data) return;
         
-        const updates = {};
-        Object.entries(data).forEach(([id, notif]) => {
-          if (!notif.read) {
-            updates[`notifications/${userId}/${id}/read`] = true;
-          }
-        });
-
-        if (Object.keys(updates).length > 0) {
-          update(dbRef(db), updates);
-        }
+        notificationDot.style.display = hasUnread ? 'block' : 'none';
       });
     }
     
-    function truncate(str, n) {
-        return (str.length > n) ? str.slice(0, n-1) + '...' : str;
+    function markNotificationsAsRead() {
+      const notificationsRef = ref(db, `notifications/${currentUserId}`);
+      onValue(notificationsRef, (snapshot) => {
+        const updates = {};
+        snapshot.forEach((child) => {
+          if (child.val().unread) {
+            updates[`${child.key}/unread`] = false;
+          }
+        });
+        if (Object.keys(updates).length > 0) {
+          update(ref(db, `notifications/${currentUserId}`), updates);
+        }
+      }, { onlyOnce: true }); // Only need to do this once
+    }
+    
+    async function sendNotification(targetUserId, text) {
+      if (targetUserId === currentUserId) return; // Don't notify self
+      
+      const notification = {
+        text: text,
+        timestamp: serverTimestamp(),
+        unread: true
+      };
+      
+      const newNotificationRef = push(ref(db, `notifications/${targetUserId}`));
+      await set(newNotificationRef, notification);
     }
 
-    // --- Tab Switching Logic ---
+    // =============================
+    // Main App Logic (Tabs & Comments)
+    // =============================
+
+    // Handle Tab Switching
     tabsContainer.addEventListener("click", (e) => {
-      if (!e.target.classList.contains("tab-btn")) return;
-      const newCategory = e.target.dataset.category;
-      if (newCategory === currentCategory) return;
-
-      if (newCategory === 'all') {
-        commentForm.style.display = 'none';
-      } else {
-        commentForm.style.display = 'block';
+      if (e.target.classList.contains("tab-btn")) {
+        const newCategory = e.target.dataset.category;
+        if (newCategory === currentCategory) return;
+        
+        tabsContainer.querySelector(".active").classList.remove("active");
+        e.target.classList.add("active");
+        currentCategory = newCategory;
+        
+        // Hide form on "All Comments" tab
+        commentForm.style.display = (currentCategory === 'all') ? 'none' : 'block';
+        
+        loadComments();
       }
-
-      tabsContainer.querySelector(".active").classList.remove("active");
-      e.target.classList.add("active");
-      currentCategory = newCategory;
-      
-      if (authReady) loadComments();
     });
 
-    // --- Comment Submission ---
-    commentForm.addEventListener("submit", async (e) => {
+    // NEW: Handle Sort Switching
+    sortControl.addEventListener('change', (e) => {
+      currentSort = e.target.value;
+      loadComments();
+    });
+
+    // Handle Comment Submission
+    commentForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = commentText.value.trim();
-      if (!text || !authReady) return;
+      if (!text || !currentUserId || !currentUsername) return;
 
-      submitButton.disabled = true;
-      submitButton.textContent = "Submitting...";
+      const comment = {
+        text,
+        timestamp: serverTimestamp(),
+        category: currentCategory,
+        userId: currentUserId,
+        username: currentUsername,
+        replies: {},
+        reactions: {},
+      };
 
-      try {
-        const comment = {
-          text,
-          userId: currentUserId, 
-          username: currentUsername, // Save the username
-          category: currentCategory, 
-          timestamp: serverTimestamp(), 
-          reactions: {},
-          replies: {},
-        };
-
-        const commentsRef = dbRef(db, `comments/${currentCategory}`);
-        await push(commentsRef, comment);
-        
-        commentText.value = "";
-      } catch (error) {
-        console.error("Error adding comment: ", error);
-      } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = "Submit Comment";
-      }
+      const commentsRef = ref(db, `comments/${currentCategory}`);
+      push(commentsRef, comment);
+      commentText.value = "";
     });
-
-    /**
-     * Load Comments
-     */
+    
+    // Load Comments for Current Category
     function loadComments() {
-      if (!authReady) return; 
-
       commentsContainer.innerHTML = "";
       loadingElement.style.display = "block";
-
+      
+      // Detach old listener *if* it exists
       if (currentCommentsRef) {
         off(currentCommentsRef);
         currentCommentsRef = null;
       }
 
-      let newRef;
       if (currentCategory === 'all') {
-        newRef = dbRef(db, 'comments'); 
+        loadAllComments();
       } else {
-        newRef = dbRef(db, `comments/${currentCategory}`); 
+        loadCategoryComments(currentCategory);
       }
-      currentCommentsRef = newRef;
+    }
 
+    function loadCategoryComments(category) {
+      // Use query... but sorting by timestamp in FB is only for filtering,
+      // we must sort manually after fetch for custom logic.
+      currentCommentsRef = ref(db, `comments/${category}`);
       onValue(currentCommentsRef, (snapshot) => {
         loadingElement.style.display = "none";
+        commentsContainer.innerHTML = "";
         const data = snapshot.val();
         
         if (!data) {
-          commentsContainer.innerHTML = "<p class='empty-state'>No comments yet. Be the first!</p>";
+          commentsContainer.innerHTML = '<p class="empty-message">No comments yet. Be the first!</p>';
           return;
         }
-
-        const comments = [];
-        if (currentCategory === 'all') {
-          const allNodes = data;
-          Object.entries(allNodes).forEach(([key, value]) => {
-            if (value && (typeof value.text === 'string') && (value.timestamp)) {
-              // This is a root-level (old) comment
-              comments.push({ 
-                id: key, 
-                ...value, 
-                category: 'general', // Assign to 'general' for reply/reaction logic
-                isRootComment: true 
-              });
-            } else if (value && typeof value === 'object') {
-              // This is a category folder
-              const categoryName = key;
-              const commentsInCategory = value;
-              Object.entries(commentsInCategory).forEach(([commentId, commentData]) => {
-                comments.push({ 
-                  id: commentId, 
-                  ...commentData, 
-                  category: categoryName, 
-                  isRootComment: false 
-                });
-              });
-            }
-          });
-        } else {
-          // We are in a specific category tab
-          Object.entries(data).forEach(([id, c]) => {
-            comments.push({ id, ...c, isRootComment: false }); 
-          });
-        }
         
-        comments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-        commentsContainer.innerHTML = ""; 
+        let comments = Object.entries(data)
+          .map(([id, c]) => ({ id, ...c, isOld: false, category: category }));
+        
+        // --- NEW: Sorting Logic ---
+        if (currentSort === 'mostReacted') {
+          comments.sort((a, b) => getTotalReactions(b) - getTotalReactions(a));
+        } else {
+          comments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Default
+        }
+          
         comments.forEach((c) => {
-          const el = createCommentElement(c, false, null);
+          const el = createCommentElement(c);
           commentsContainer.appendChild(el);
         });
-
-      }, (error) => {
-        console.error("Error loading comments: ", error);
-        loadingElement.style.display = "none";
-        commentsContainer.innerHTML = "<p class='empty-state'>Error loading comments.</p>";
       });
     }
 
-    /**
-     * Creates the DOM element for a single comment or reply.
-     */
-    function createCommentElement(item, isReply = false, parentId = null, parentCategory = null, parentIsRoot = false) {
+    function loadAllComments() {
+      // This is more complex. We fetch all categories + root comments.
+      const allCommentsRef = ref(db, `comments`);
+      // We use onlyOnce: true for performance on "All" tab.
+      // It will re-sort if the sort dropdown is changed.
+      onValue(allCommentsRef, (snapshot) => {
+        loadingElement.style.display = "none";
+        commentsContainer.innerHTML = "";
+        const allData = snapshot.val();
+        let allComments = [];
+
+        if (!allData) {
+          commentsContainer.innerHTML = '<p class="empty-message">No comments found anywhere.</p>';
+          return;
+        }
+
+        Object.entries(allData).forEach(([key, value]) => {
+          if (['seniors', 'juniors', 'faculty', 'general'].includes(key)) {
+            // This is a category folder
+            Object.entries(value).forEach(([id, c]) => {
+              allComments.push({ id, ...c, isOld: false, category: key });
+            });
+          } else if (value && typeof value === 'object' && value.timestamp) {
+            // This is an "old" root-level comment
+            allComments.push({ id: key, ...value, isOld: true, category: 'general' });
+          }
+        });
+
+        // --- NEW: Sorting Logic ---
+        if (currentSort === 'mostReacted') {
+          allComments.sort((a, b) => getTotalReactions(b) - getTotalReactions(a));
+        } else {
+          allComments.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Default
+        }
+        
+        if (allComments.length === 0) {
+          commentsContainer.innerHTML = '<p class="empty-message">No comments found anywhere.</p>';
+          return;
+        }
+        
+        allComments.forEach((c) => {
+          const el = createCommentElement(c);
+          commentsContainer.appendChild(el);
+        });
+        
+      }, { onlyOnce: true });
+    }
+
+    // =============================
+    // Create Comment/Reply Element
+    // =============================
+    function createCommentElement(comment, isReply = false, parentComment = null) {
       const box = document.createElement("div");
       box.classList.add(isReply ? "reply-box" : "comment-box");
-      box.dataset.id = item.id;
 
-      // Display Username (if it exists)
-      if (item.username) {
-        const usernameEl = document.createElement("strong");
-        usernameEl.textContent = item.username;
-        usernameEl.classList.add("comment-username");
-        box.appendChild(usernameEl);
+      // --- Author Line (Author + Timestamp) ---
+      const authorLine = document.createElement("div");
+      authorLine.classList.add("author-line");
+
+      const author = document.createElement("span");
+      author.classList.add("comment-author");
+      author.textContent = comment.username || 'Anonymous';
+      if (comment.username) {
+        const lowerCaseUsername = comment.username.toLowerCase();
+        if (lowerCaseUsername === 'admin') {
+          author.classList.add("admin");
+        } else if (lowerCaseUsername === 'tuntun') {
+          author.classList.add("tuntun");
+        }
+      }
+      authorLine.appendChild(author);
+      
+      // NEW: Timestamp
+      const timestamp = document.createElement("span");
+      timestamp.classList.add("comment-timestamp");
+      timestamp.textContent = `• ${timeAgo(comment.timestamp)}`;
+      authorLine.appendChild(timestamp);
+      
+      box.appendChild(authorLine);
+
+
+      // --- Comment Text ---
+      const text = document.createElement("p");
+      text.textContent = comment.text;
+      text.style.display = "block"; // Default state
+      box.appendChild(text);
+
+      // --- Edit Form (Hidden) ---
+      let editForm = null;
+      if (comment.userId === currentUserId) {
+        editForm = document.createElement("form");
+        editForm.classList.add("edit-form");
+        editForm.style.display = "none";
+        
+        const editInput = document.createElement("textarea");
+        editInput.value = comment.text;
+        
+        const saveButton = document.createElement("button");
+        saveButton.type = "submit";
+        saveButton.textContent = "Save";
+        
+        const cancelButton = document.createElement("button");
+        cancelButton.type = "button";
+        cancelButton.textContent = "Cancel";
+        cancelButton.classList.add("cancel-btn");
+        
+        editForm.appendChild(editInput);
+        editForm.appendChild(saveButton);
+        editForm.appendChild(cancelButton);
+        box.appendChild(editForm);
+
+        // Edit form submit logic
+        editForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const newText = editInput.value.trim();
+          if (!newText) return;
+
+          let path;
+          if (isReply) {
+            // Path for a reply
+            const cat = parentComment.isOld ? '' : `/${parentComment.category}`;
+            path = `comments${cat}/${parentComment.id}/replies/${comment.id}/text`;
+          } else {
+            // Path for a comment
+            const cat = comment.isOld ? '' : `/${comment.category}`;
+            path = `comments${cat}/${comment.id}/text`;
+          }
+          
+          update(ref(db), { [path]: newText });
+          text.textContent = newText;
+          text.style.display = "block";
+          editForm.style.display = "none";
+        });
+        
+        // Cancel button logic
+        cancelButton.addEventListener("click", () => {
+          text.style.display = "block";
+          editForm.style.display = "none";
+        });
       }
 
-      // Main content
-      const textEl = document.createElement("p");
-      textEl.textContent = item.text || "";
-      textEl.classList.add("comment-text");
-      box.appendChild(textEl);
-      
+      // --- Controls (Reply, Edit, Delete) ---
       const controls = document.createElement("div");
       controls.classList.add("controls");
       
-      // Left side: Reply/Edit/Delete
-      const actionButtons = document.createElement("div");
-      actionButtons.classList.add("action-buttons");
-
-      let replyForm = null;
-      let editForm = null;
-
-      // --- Reply Button (show if not reply AND not on 'all' tab) ---
+      // Reply Button
       if (!isReply && currentCategory !== 'all') {
         const replyBtn = document.createElement("button");
         replyBtn.textContent = "💬 Reply";
         replyBtn.classList.add("reply-btn");
-        if (!authReady) replyBtn.disabled = true; // Disable if not logged in
-        actionButtons.appendChild(replyBtn);
+        controls.appendChild(replyBtn);
         
+        replyBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Stop if click was on a reaction
+          if (e.target.classList.contains("reaction")) return;
+          e.stopPropagation();
+          
+          const isOpen = replyForm.style.display === "block";
+          // Close all *other* reply forms
+          document.querySelectorAll('.reply-form').forEach(f => f.style.display = 'none');
+          if (!isOpen) {
+            replyForm.style.display = "block";
+            replyForm.querySelector('textarea').focus();
+          }
+        });
+      }
+      
+      // NEW: Check for admin status
+      const isAdmin = currentUsername && currentUsername.toLowerCase() === 'admin';
+      
+      // Edit Button (Owner only)
+      if (comment.userId === currentUserId) {
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️";
+        editBtn.title = "Edit";
+        editBtn.classList.add("edit-btn");
+        controls.appendChild(editBtn);
+        
+        editBtn.addEventListener("click", () => {
+          text.style.display = "none";
+          editForm.style.display = "block";
+          editForm.querySelector('textarea').focus();
+        });
+      }
+      
+      // Delete Button (Owner OR Admin)
+      if (comment.userId === currentUserId || isAdmin) {
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.title = "Delete";
+        deleteBtn.classList.add("delete-btn");
+        controls.appendChild(deleteBtn);
+        
+        deleteBtn.addEventListener("click", () => {
+          if (deleteBtn.classList.contains("confirm")) {
+            // --- Confirmed Delete ---
+            let path;
+            if (isReply) {
+              const cat = parentComment.isOld ? '' : `/${parentComment.category}`;
+              path = `comments${cat}/${parentComment.id}/replies/${comment.id}`;
+            } else {
+              const cat = comment.isOld ? '' : `/${comment.category}`;
+              path = `comments${cat}/${comment.id}`;
+            }
+            remove(ref(db, path));
+            // The onValue listener will handle removing the element
+            
+          } else {
+            // --- Ask for confirmation ---
+            deleteBtn.classList.add("confirm");
+            deleteBtn.textContent = "Confirm?";
+            setTimeout(() => {
+              deleteBtn.classList.remove("confirm");
+              deleteBtn.textContent = "🗑️";
+            }, 3000); // Reset after 3 seconds
+          }
+        });
+      }
+      
+      box.appendChild(controls);
+
+      // --- Reaction Buttons ---
+      const reactionContainer = document.createElement("div");
+      reactionContainer.classList.add("reaction-options");
+      
+      reactions.forEach((emoji) => {
+        const span = document.createElement("span");
+        const count = comment.reactions?.[emoji] || 0;
+        span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
+        span.classList.add("reaction");
+
+        span.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+          
+          let basePath;
+          if (isReply) {
+            const cat = parentComment.isOld ? '' : `/${parentComment.category}`;
+            basePath = `comments${cat}/${parentComment.id}/replies/${comment.id}`;
+          } else {
+            const cat = comment.isOld ? '' : `/${comment.category}`;
+            basePath = `comments${cat}/${comment.id}`;
+          }
+          
+          const path = `${basePath}/reactions/${emoji}`;
+          const newCount = (comment.reactions?.[emoji] || 0) + 1;
+          update(ref(db), { [path]: newCount });
+          
+          // Send notification
+          sendNotification(comment.userId, `${currentUsername} reacted ${emoji} to your ${isReply ? 'reply' : 'comment'}.`);
+        });
+
+        reactionContainer.appendChild(span);
+      });
+      controls.appendChild(reactionContainer); // Add to controls
+
+      // --- Reply Form (Hidden) ---
+      let replyForm = null;
+      if (!isReply) {
         replyForm = document.createElement("form");
         replyForm.classList.add("reply-form");
         replyForm.style.display = "none";
 
         const replyInput = document.createElement("textarea");
         replyInput.placeholder = "Write a reply...";
-        
         const replySubmit = document.createElement("button");
         replySubmit.type = "submit";
         replySubmit.textContent = "Post Reply";
 
         replyForm.appendChild(replyInput);
         replyForm.appendChild(replySubmit);
-        box.appendChild(replyForm); 
-        
-        replyBtn.addEventListener("click", (e) => {
-          if (e.target.closest('.reaction')) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return;
-          }
-          e.preventDefault();
-          e.stopPropagation();
-          // Hide all other open forms in this box
-          if (editForm) editForm.style.display = 'none';
-          textEl.style.display = 'block';
+        box.appendChild(replyForm);
 
-          // Hide all other open reply forms
-          document.querySelectorAll('.reply-form').forEach(f => {
-              if (f !== replyForm) f.style.display = 'none';
-          });
-          // Toggle this form
-          const isOpen = replyForm.style.display === "block";
-          replyForm.style.display = isOpen ? "none" : "block";
-          if (!isOpen) {
-            replyInput.focus();
-          }
-        });
-
-        // --- Handle Reply Submission ---
-        replyForm.addEventListener("submit", async (e) => {
+        replyForm.addEventListener("submit", (e) => {
           e.preventDefault();
           const replyText = replyInput.value.trim();
-          if (!replyText || !authReady) return; 
+          if (!replyText || !currentUserId || !currentUsername) return;
 
-          replySubmit.disabled = true;
-          replySubmit.textContent = "Posting...";
+          const reply = {
+            text: replyText,
+            timestamp: serverTimestamp(),
+            userId: currentUserId,
+            username: currentUsername,
+            reactions: {},
+          };
 
-          try {
-            const reply = {
-              text: replyText,
-              userId: currentUserId,
-              username: currentUsername, // Add username to reply
-              timestamp: serverTimestamp(),
-              reactions: {},
-            };
-            
-            // Determine the correct path to save the reply
-            let repliesRef;
-            if (item.isRootComment) {
-              repliesRef = dbRef(db, `comments/${item.id}/replies`);
-            } else {
-              repliesRef = dbRef(db, `comments/${item.category}/${item.id}/replies`);
-            }
-            await push(repliesRef, reply);
+          const cat = comment.isOld ? '' : `/${comment.category}`;
+          const repliesRef = ref(db, `comments${cat}/${comment.id}/replies`);
+          push(repliesRef, reply);
+          
+          // Send notification
+          sendNotification(comment.userId, `${currentUsername} replied to your comment.`);
 
-            // Send notification to parent comment author
-            createNotification(item.userId, "reply", item, replyText);
-
-            replyInput.value = "";
-            replyForm.style.display = "none";
-
-          } catch (error) {
-            console.error("Error adding reply: ", error);
-          } finally {
-            replySubmit.disabled = false;
-            replySubmit.textContent = "Post Reply";
-          }
+          replyInput.value = "";
+          replyForm.style.display = "none";
         });
       }
 
-      // --- Edit & Delete Buttons (show if user is author) ---
-      if (authReady && item.userId === currentUserId) {
-        
-        // --- Edit Button ---
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "✏️";
-        editBtn.title = "Edit";
-        editBtn.classList.add("action-btn", "edit-btn");
-        actionButtons.appendChild(editBtn);
-        
-        // --- Delete Button ---
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "🗑️";
-        deleteBtn.title = "Delete";
-        deleteBtn.classList.add("action-btn", "delete-btn");
-        actionButtons.appendChild(deleteBtn);
-
-        // --- Edit Form (hidden) ---
-        editForm = document.createElement("form");
-        editForm.classList.add("edit-form");
-        editForm.style.display = "none";
-        
-        const editInput = document.createElement("textarea");
-        editInput.value = item.text;
-        
-        const editActions = document.createElement("div");
-        editActions.classList.add("form-actions");
-
-        const editSubmit = document.createElement("button");
-        editSubmit.type = "submit";
-        editSubmit.textContent = "Save";
-        
-        const editCancel = document.createElement("button");
-        editCancel.type = "button";
-        editCancel.textContent = "Cancel";
-        editCancel.classList.add("cancel-edit-btn");
-        
-        editActions.appendChild(editSubmit);
-        editActions.appendChild(editCancel);
-        editForm.appendChild(editInput);
-        editForm.appendChild(editActions);
-        box.appendChild(editForm);
-
-        // Edit button click
-        editBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          // Hide reply form if open
-          if (replyForm) replyForm.style.display = 'none';
-          
-          // Toggle edit form
-          const isEditing = editForm.style.display === 'block';
-          if (isEditing) {
-            editForm.style.display = 'none';
-            textEl.style.display = 'block';
-          } else {
-            editForm.style.display = 'block';
-            textEl.style.display = 'none';
-            editInput.focus();
-          }
-        });
-        
-        // Cancel edit
-        editCancel.addEventListener("click", () => {
-          editForm.style.display = 'none';
-          textEl.style.display = 'block';
-        });
-        
-        // Submit edit
-        editForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const newText = editInput.value.trim();
-          if (!newText || newText === item.text) {
-            editForm.style.display = 'none';
-            textEl.style.display = 'block';
-            return;
-          }
-
-          editSubmit.disabled = true;
-          editSubmit.textContent = "Saving...";
-
-          // Find the correct path to update
-          const path = getItemPath(item, isReply, parentId, parentCategory, parentIsRoot);
-          
-          try {
-            await update(dbRef(db, path), { text: newText });
-            textEl.textContent = newText; // Update UI
-          } catch (error) {
-            console.error("Error updating item: ", error);
-          } finally {
-            editSubmit.disabled = false;
-            editSubmit.textContent = "Save";
-            editForm.style.display = 'none';
-            textEl.style.display = 'block';
-          }
-        });
-
-        // --- Delete Button Logic ---
-        deleteBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          
-          // Show confirmation
-          if (deleteBtn.textContent === "🗑️") {
-            deleteBtn.textContent = "Confirm?";
-            deleteBtn.classList.add("confirm-delete-btn");
-            // Reset after 3 seconds
-            setTimeout(() => {
-              deleteBtn.textContent = "🗑️";
-              deleteBtn.classList.remove("confirm-delete-btn");
-            }, 3000);
-          } else {
-            // On second click (Confirm)
-            deleteBtn.disabled = true;
-            deleteBtn.textContent = "Deleting...";
-
-            const path = getItemPath(item, isReply, parentId, parentCategory, parentIsRoot);
-            
-            try {
-              remove(dbRef(db, path));
-              // The onValue listener will automatically remove the element from the UI
-            } catch (error) {
-              console.error("Error deleting item: ", error);
-              deleteBtn.disabled = false;
-              deleteBtn.textContent = "Error!";
-            }
-          }
-        });
-      }
-
-      controls.appendChild(actionButtons);
-
-      // --- Reaction Buttons (Right side) ---
-      const reactionContainer = document.createElement("div");
-      reactionContainer.classList.add("reaction-options");
-
-      reactions.forEach((emoji) => {
-        const span = document.createElement("span");
-        const count = item.reactions?.[emoji] || 0;
-        span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
-        span.classList.add("reaction");
-        if (!authReady) span.classList.add("disabled"); // Disable if not logged in
-
-        span.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          if (!authReady) return;
-          
-          const path = getItemPath(item, isReply, parentId, parentCategory, parentIsRoot);
-          const reactionPath = `${path}/reactions/${emoji}`;
-          
-          const newCount = (item.reactions?.[emoji] || 0) + 1;
-          
-          try {
-            update(dbRef(db), { [reactionPath]: newCount });
-            span.textContent = `${emoji} ${newCount}`;
-            
-            // Send notification
-            createNotification(item.userId, "reaction", item, emoji);
-
-          } catch (error) {
-            console.error("Error updating reaction: ", error);
-          }
-        });
-
-        reactionContainer.appendChild(span);
-      });
-      
-      controls.appendChild(reactionContainer);
-      box.appendChild(controls); 
-
-      // --- Render Replies ---
-      if (!isReply && item.replies) {
+      // --- Render Replies Recursively ---
+      if (comment.replies) {
         const repliesDiv = document.createElement("div");
         repliesDiv.classList.add("replies");
-        box.appendChild(repliesDiv);
-
-        const replies = Object.entries(item.replies)
+        const sorted = Object.entries(comment.replies)
           .map(([id, r]) => ({ id, ...r }))
-          .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-        replies.forEach((r) => {
-          // Pass down parent info
-          repliesDiv.appendChild(createCommentElement(r, true, item.id, item.category, item.isRootComment));
+          .sort((a, b) => a.timestamp - b.timestamp);
+          
+        sorted.forEach((r) => {
+          // Pass the original comment (which is the parent)
+          repliesDiv.appendChild(createCommentElement(r, true, comment));
         });
+        box.appendChild(repliesDiv);
       }
 
       return box;
     }
-    
-    /**
-     * Helper to get the correct DB path for an item
-     */
-    function getItemPath(item, isReply, parentId, parentCategory, parentIsRoot) {
-      const itemCategory = parentCategory || item.category;
-      const isRoot = parentIsRoot || item.isRootComment;
-      
-      if (isReply) {
-        if (isRoot) {
-          return `comments/${parentId}/replies/${item.id}`;
-        } else {
-          return `comments/${itemCategory}/${parentId}/replies/${item.id}`;
-        }
-      } else {
-        if (isRoot) {
-          return `comments/${item.id}`;
-        } else {
-          return `comments/${itemCategory}/${item.id}`;
-        }
-      }
-    }
 
-    // --- Auth Error Helper ---
-    function getAuthErrorMessage(code) {
-      switch (code) {
-        case 'auth/invalid-email':
-          return 'Please enter a valid username (no spaces or @).';
-        case 'auth/weak-password':
-          return 'Password must be at least 6 characters long.';
-        case 'auth/email-already-in-use':
-          return 'This username is already taken. Please try another.';
-        case 'auth/invalid-credential':
-          return 'Invalid username or password.';
-        default:
-          console.error("Unhandled auth error:", code);
-          return 'An unknown error occurred. Please try again.';
-      }
-    }
+    // Initial check (in case user is already logged in)
+    // onAuthStateChanged will handle the initial load
   </script>
 </body>
 </html>
-
