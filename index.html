@@ -542,7 +542,7 @@
       position: absolute;
       right: 20px;
       top: 60px;
-      width: 300px;
+      width: 320px; /* Slightly wider */
       max-height: 400px;
       overflow-y: auto;
       background-color: var(--surface-color);
@@ -563,10 +563,10 @@
       border-bottom: 1px solid var(--border-color);
       font-size: 0.9em;
       color: var(--text-secondary);
-      cursor: pointer; /* NEW: Clickable */
+      cursor: pointer; /* Clickable */
       transition: background-color 0.2s;
     }
-
+    
     #notificationList li:hover {
       background-color: #2a2a2a;
     }
@@ -577,6 +577,14 @@
     
     #notificationList li strong {
       color: var(--text-primary);
+    }
+    
+    /* NEW: Notification time */
+    #notificationList .notification-time {
+      display: block;
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      margin-top: 4px;
     }
 
     #notificationList .no-notifications {
@@ -837,13 +845,14 @@
 
     // Global State
     let currentCategory = 'general';
-    let currentCommentsRef = null;
     let authUser = null; // { uid, username }
     const reactions = ["👍", "😂", "😍", "😢", "😮", "😡", "😀"];
     const FAKE_EMAIL_DOMAIN = "@isrt-feedback.com";
     let allUsers = {}; // Cache for @mentions { uid: 'username' }
     let currentSortOrder = 'newest';
     let activeNotificationListeners = []; // To detach listeners
+    let activeCommentListeners = []; // To detach comment listeners
+    let allCommentsData = {}; // Global store for "All Comments" tab
 
     // DOM Elements
     const authContainer = document.getElementById("authContainer");
@@ -1027,10 +1036,15 @@
     // Auth State Change (Main app driver)
     onAuthStateChanged(auth, (user) => {
       // Detach all old notification listeners
-      activeNotificationListeners.forEach(l => off(l.ref, l.type));
+      activeNotificationListeners.forEach(l => off(l.ref, l.type, l.func));
       activeNotificationListeners = [];
       notificationList.innerHTML = '<li class="no-notifications">No new notifications.</li>';
       notificationDot.style.display = 'none';
+
+      // Detach all old comment listeners
+      activeCommentListeners.forEach(l => off(l.ref, l.type, l.func));
+      activeCommentListeners = [];
+      allCommentsData = {};
 
       if (user) {
         // User is logged in
@@ -1038,7 +1052,7 @@
         appContainer.style.display = "block";
         
         // Get username from database
-        const userRef = ref(db, 'users/' + user.uid); // <-- FIX HERE
+        const userRef = ref(db, 'users/' + user.uid);
         onValue(userRef, (snapshot) => {
           const userData = snapshot.val();
           if (userData && userData.username) {
@@ -1071,7 +1085,6 @@
         authUser = null;
         commentsContainer.innerHTML = "<p>Please log in to see comments.</p>";
         authStatus.textContent = "You are not logged in.";
-        if (currentCommentsRef) off(currentCommentsRef);
       }
     });
 
@@ -1133,9 +1146,10 @@
       
       const li = document.createElement("li");
       li.dataset.key = key;
-      li.innerHTML = `<span>${notif.message}</span>`;
+      // NEW: Add timestamp
+      li.innerHTML = `<span>${notif.message}</span><span class="notification-time">${getRelativeTime(notif.timestamp)}</span>`;
       
-      // NEW: Add click listener to open modal
+      // Add click listener to open modal
       if (notif.link) {
         li.dataset.linkPath = notif.link.path;
         li.dataset.linkType = notif.link.type;
@@ -1180,7 +1194,7 @@
       }
     });
 
-    // NEW: Handle clicking a notification
+    // Handle clicking a notification
     async function handleNotificationClick(link) {
       if (!link || !link.path) return;
 
@@ -1228,14 +1242,14 @@
     }
     
     async function sendNotification(targetUid, message, link = null) {
-      if (targetUid === authUser.uid) return; // Don't notify self
+      if (!targetUid || targetUid === authUser.uid) return; // Don't notify self
       
       const notifRef = ref(db, `notifications/${targetUid}`);
       const newNotif = {
         message,
         timestamp: Date.now(),
         read: false,
-        link // NEW: Add link object
+        link // Add link object
       };
       await push(notifRef, newNotif);
     }
@@ -1286,82 +1300,79 @@
     // Handle sorting
     sortOrderSelect.addEventListener("change", (e) => {
       currentSortOrder = e.target.value;
-      loadComments();
+      // Re-render
+      displayComments(Object.values(allCommentsData));
     });
 
     // Load comments
     function loadComments() {
       commentsContainer.innerHTML = "";
       loadingElement.style.display = "block";
-      if (currentCommentsRef) off(currentCommentsRef); // Detach old listener
+      
+      // Detach all old listeners
+      activeCommentListeners.forEach(l => off(l.ref, l.type, l.func));
+      activeCommentListeners = [];
+      allCommentsData = {}; // Clear data store
 
       if (currentCategory === 'all') {
-        fetchAllComments();
+        fetchAllCommentsLive();
       } else {
-        fetchCategoryComments(currentCategory);
+        fetchCategoryCommentsLive(currentCategory);
       }
     }
-    
-    function fetchAllComments() {
+
+    // NEW: Live fetch for "All Comments"
+    function fetchAllCommentsLive() {
       const categories = ['general', 'seniors', 'juniors', 'faculty'];
-      const promises = categories.map(cat => {
-        return new Promise((resolve) => {
-          const catRef = ref(db, `comments/${cat}`);
-          onValue(catRef, (snapshot) => {
-            resolve({ category: cat, data: snapshot.val() || {} });
-          }, { onlyOnce: true });
+      
+      // 1. Listen to all categories
+      categories.forEach(category => {
+        const commentsRef = ref(db, `comments/${category}`);
+        const listener = onValue(commentsRef, (snapshot) => {
+          loadingElement.style.display = 'none';
+          const data = snapshot.val() || {};
+          // Update global store
+          Object.entries(data).forEach(([id, c]) => {
+            allCommentsData[id] = { id, ...c, category: category, isRoot: false };
+          });
+          displayComments(Object.values(allCommentsData));
         });
+        activeCommentListeners.push({ ref: commentsRef, type: 'value', func: listener });
       });
       
-      // Also fetch old, root-level comments
-      promises.push(new Promise((resolve) => {
-        const rootRef = ref(db, 'comments');
-        onValue(rootRef, (snapshot) => {
-           const allData = snapshot.val() || {};
-           const rootComments = {};
-           Object.entries(allData).forEach(([key, value]) => {
-             // Filter out category folders
-             if (key !== 'general' && key !== 'seniors' && key !== 'juniors' && key !== 'faculty') {
-               rootComments[key] = value;
+      // 2. Listen to root comments (old ones)
+      const rootCommentsRef = ref(db, 'comments');
+      const rootListener = onValue(rootCommentsRef, (snapshot) => {
+          loadingElement.style.display = 'none';
+          const data = snapshot.val() || {};
+          Object.entries(data).forEach(([id, c]) => {
+             // If the key is NOT a category, it's a root comment
+             if (!categories.includes(id) && id !== 'users' && id !== 'notifications') {
+                allCommentsData[id] = { id, ...c, category: null, isRoot: true };
              }
-           });
-           resolve({ category: null, data: rootComments, isRoot: true });
-        }, { onlyOnce: true });
-      }));
-
-      Promise.all(promises).then(results => {
-        loadingElement.style.display = 'none';
-        let allComments = [];
-        
-        results.forEach(result => {
-          const { category, data, isRoot } = result;
-          const comments = Object.entries(data).map(([id, c]) => ({ 
-            id, 
-            ...c, 
-            category: isRoot ? null : category, // Store category
-            isRoot: isRoot || false
-          }));
-          allComments = allComments.concat(comments);
-        });
-        
-        displayComments(allComments);
+          });
+          displayComments(Object.values(allCommentsData));
       });
+      activeCommentListeners.push({ ref: rootCommentsRef, type: 'value', func: rootListener });
     }
 
-    function fetchCategoryComments(category) {
-      currentCommentsRef = ref(db, `comments/${category}`);
-      onValue(currentCommentsRef, (snapshot) => {
+    // NEW: Live fetch for single category
+    function fetchCategoryCommentsLive(category) {
+      const commentsRef = ref(db, `comments/${category}`);
+      const listener = onValue(commentsRef, (snapshot) => {
         loadingElement.style.display = 'none';
         const data = snapshot.val() || {};
-        const comments = Object.entries(data).map(([id, c]) => ({ 
-          id, 
-          ...c, 
-          category: category,
-          isRoot: false 
-        }));
-        
-        displayComments(comments);
+        allCommentsData = {}; // Clear store, we only care about this category
+        Object.entries(data).forEach(([id, c]) => {
+            allCommentsData[id] = { id, ...c, category: category, isRoot: false };
+        });
+        displayComments(Object.values(allCommentsData));
+      }, (error) => {
+          loadingElement.style.display = 'none';
+          console.error("Permission denied loading category:", error);
+          commentsContainer.innerHTML = `<p style='color: var(--tuntun-color);'>Error: Could not load ${category} comments.</p>`;
       });
+      activeCommentListeners.push({ ref: commentsRef, type: 'value', func: listener });
     }
     
     function displayComments(comments) {
@@ -1465,6 +1476,7 @@
         pinBtn.textContent = comment.isPinned ? "📌 Unpin" : "📌 Pin";
         pinBtn.onclick = (e) => {
           e.stopPropagation();
+          // Pinning only happens on main page, so paths are simple
           const commentPath = isRootComment 
             ? `comments/${comment.id}` 
             : `comments/${category}/${comment.id}`;
@@ -1483,7 +1495,7 @@
         editBtn.onclick = (e) => {
           e.stopPropagation();
           menuDropdown.style.display = 'none';
-          showEditForm(box, text, comment, category, isRootComment, parentId, isReply);
+          showEditForm(box, text, comment, category, isRootComment, parentId, isReply, isModal);
         };
         menuDropdown.appendChild(editBtn);
       }
@@ -1498,17 +1510,28 @@
           e.stopPropagation();
           if (deleteBtn.textContent === "🗑️ Delete") {
             deleteBtn.textContent = "Confirm?";
+            // Reset after 3s
+            setTimeout(() => {
+                if (deleteBtn) deleteBtn.textContent = "🗑️ Delete";
+            }, 3000);
           } else {
             let itemPath;
+            // Get correct context (modal or main page)
+            const itemCat = isModal ? category : comment.category;
+            const itemRoot = isModal ? isRootComment : comment.isRoot;
+
             if (isReply) {
-              const replyParentPath = isRootComment 
+              const parentCat = isModal ? category : comment.parentCategory;
+              const parentRoot = isModal ? isRootComment : comment.parentIsRoot;
+
+              const replyParentPath = parentRoot
                 ? `comments/${parentId}` 
-                : `comments/${category}/${parentId}`;
+                : `comments/${parentCat}/${parentId}`;
               itemPath = `${replyParentPath}/replies/${comment.id}`;
             } else {
-              itemPath = isRootComment 
+              itemPath = itemRoot 
                 ? `comments/${comment.id}` 
-                : `comments/${category}/${comment.id}`;
+                : `comments/${itemCat}/${comment.id}`;
             }
             remove(ref(db, itemPath));
             if (isModal) {
@@ -1601,7 +1624,10 @@
           e.stopPropagation();
           const isOpen = replyForm.style.display === "block";
           // Close all forms in this box
-          box.querySelectorAll('.reply-form').forEach(f => f.style.display = 'none');
+          box.querySelectorAll('.reply-form, .edit-form').forEach(f => f.style.display = 'none');
+          // Show text element in case edit was open
+          box.querySelectorAll('.comment-text, .reply-text').forEach(t => t.style.display = 'block');
+          
           if (!isOpen) {
             replyForm.style.display = "block";
             replyForm.querySelector('textarea').focus();
@@ -1620,17 +1646,25 @@
             username: authUser.username,
             reactions: {},
           };
+          
+          // Handle modal/main page pathing
+          const itemCat = isModal ? category : comment.category;
+          const itemRoot = isModal ? isRootComment : comment.isRoot;
 
-          const replyPath = isRootComment 
+          const replyPath = itemRoot 
             ? `comments/${comment.id}/replies`
-            : `comments/${category}/${comment.id}/replies`;
+            : `comments/${itemCat}/${comment.id}/replies`;
           
           const newReplyRef = push(ref(db, replyPath), reply);
           
           // --- Handle Reply Notifications ---
           // Link to the *top-level* comment, but note the reply ID
+          const linkPath = itemRoot
+            ? `comments/${comment.id}`
+            : `comments/${itemCat}/${comment.id}`;
+            
           const linkInfo = {
-             path: isRootComment ? `comments/${comment.id}` : `comments/${category}/${comment.id}`,
+             path: linkPath,
              type: 'reply',
              replyId: newReplyRef.key
           };
@@ -1689,17 +1723,27 @@
           
           let userReactionPath;
           let linkPath; // For notification
+          let linkType = 'reaction';
+          
+          // Get correct context (modal or main page)
+          // BUG FIX: isRoot was from comment, but on replies, need parent's context
+          const parentCat = isModal ? category : comment.parentCategory;
+          const parentRoot = isModal ? isRootComment : comment.parentIsRoot;
+
+          const itemCat = isModal ? category : comment.category;
+          const itemRoot = isModal ? isRootComment : comment.isRoot;
           
           if (isReply) {
-             const replyParentPath = isRootComment 
+             const replyParentPath = parentRoot
                ? `comments/${parentId}` 
-               : `comments/${category}/${parentId}`;
+               : `comments/${parentCat}/${parentId}`;
              userReactionPath = `${replyParentPath}/replies/${comment.id}/reactions/${authUser.uid}`;
              linkPath = replyParentPath; // Link to parent comment
+             linkType = 'reply'; // Link to the parent comment, highlight reply
           } else {
-             const commentPath = isRootComment 
+             const commentPath = itemRoot 
                ? `comments/${comment.id}` 
-               : `comments/${category}/${comment.id}`;
+               : `comments/${itemCat}/${comment.id}`;
              userReactionPath = `${commentPath}/reactions/${authUser.uid}`;
              linkPath = commentPath;
           }
@@ -1715,7 +1759,12 @@
             
             // Send notification (but not for self, and only on new reaction)
             if(comment.userId !== authUser.uid && !userReaction) {
-              const linkInfo = { path: linkPath, type: 'reaction' };
+              const linkInfo = { 
+                path: linkPath, 
+                type: linkType,
+                // if it's a reaction on a reply, add the replyId
+                replyId: isReply ? comment.id : null 
+              };
               sendNotification(comment.userId, `<strong>${authUser.username}</strong> reacted ${emoji} to your post.`, linkInfo);
             }
           }
@@ -1732,13 +1781,24 @@
       if (comment.replies) {
         const repliesDiv = document.createElement("div");
         repliesDiv.classList.add("replies");
+        
+        // Get parent's context
+        const parentCat = isModal ? category : comment.category;
+        const parentRoot = isModal ? isRootComment : comment.isRoot;
+
         const sorted = Object.entries(comment.replies)
-          .map(([id, r]) => ({ id, ...r }))
+          .map(([id, r]) => ({ 
+             id, 
+             ...r, 
+             // Pass down parent's category/root info for correct pathing
+             parentCategory: parentCat,
+             parentIsRoot: parentRoot
+          }))
           .sort((a, b) => a.timestamp - b.timestamp);
         
         sorted.forEach((r) => {
           // Pass parent ID (comment.id)
-          repliesDiv.appendChild(createCommentElement(r, category, isRootComment, comment.id, true, isModal));
+          repliesDiv.appendChild(createCommentElement(r, null, null, comment.id, true, isModal));
         });
         box.appendChild(repliesDiv);
       }
@@ -1747,8 +1807,11 @@
     }
     
     // Show edit form
-    function showEditForm(box, textElement, comment, category, isRootComment, parentId, isReply) {
+    function showEditForm(box, textElement, comment, category, isRootComment, parentId, isReply, isModal) {
       textElement.style.display = 'none'; // Hide text
+      // Close reply form if open
+      const replyForm = box.querySelector('.reply-form');
+      if (replyForm) replyForm.style.display = 'none';
       
       const editForm = document.createElement("form");
       editForm.classList.add("edit-form");
@@ -1787,15 +1850,22 @@
         if (!newText) return;
         
         let itemPath;
+        // Get correct context (modal or main page)
+        const parentCat = isModal ? category : comment.parentCategory;
+        const parentRoot = isModal ? isRootComment : comment.parentIsRoot;
+
+        const itemCat = isModal ? category : comment.category;
+        const itemRoot = isModal ? isRootComment : comment.isRoot;
+
         if (isReply) {
-          const replyParentPath = isRootComment 
+          const replyParentPath = parentRoot
             ? `comments/${parentId}` 
-            : `comments/${category}/${parentId}`;
+            : `comments/${parentCat}/${parentId}`;
           itemPath = `${replyParentPath}/replies/${comment.id}`;
         } else {
-          itemPath = isRootComment 
+          itemPath = itemRoot 
             ? `comments/${comment.id}` 
-            : `comments/${category}/${comment.id}`;
+            : `comments/${itemCat}/${comment.id}`;
         }
         
         update(ref(db, itemPath), { text: newText });
@@ -1860,7 +1930,7 @@
       if (interval > 1) return Math.floor(interval) + "h ago";
       interval = seconds / 60;
       if (interval > 1) return Math.floor(interval) + "m ago";
-      return Math.floor(seconds) + "s ago";
+      return Math.max(0, Math.floor(seconds)) + "s ago"; // Ensure it's not negative
     }
 
   </script>
