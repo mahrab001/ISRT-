@@ -17,6 +17,7 @@
       --admin-color: #ffd700;
       --tuntun-color: #ff4136;
       --mention-bg: #2a2a2a;
+      --reaction-highlight: rgba(77, 163, 255, 0.2); /* For user's own reaction */
     }
 
     body {
@@ -118,15 +119,8 @@
       cursor: pointer;
       font-size: 0.9em;
     }
-
-    #authError {
-      color: var(--tuntun-color);
-      text-align: center;
-      margin-bottom: 10px;
-      font-size: 0.9em;
-    }
     
-    .auth-error { /* Renamed for consistency */
+    .auth-error {
       color: var(--tuntun-color);
       text-align: center;
       margin-bottom: 10px;
@@ -409,13 +403,21 @@
     .reaction {
       cursor: pointer;
       font-size: 18px;
-      transition: transform 0.2s;
+      transition: all 0.2s;
       user-select: none;
-      padding: 2px;
+      padding: 2px 4px; /* Added padding */
+      border-radius: 4px; /* Added border-radius */
+      border: 1px solid transparent; /* Placeholder for highlight */
     }
 
     .reaction:hover {
       transform: scale(1.25);
+    }
+    
+    /* NEW: Style for user's own reaction */
+    .reaction.user-reacted {
+      background-color: var(--reaction-highlight);
+      border-color: var(--primary-color);
     }
 
     .reply-btn {
@@ -561,6 +563,12 @@
       border-bottom: 1px solid var(--border-color);
       font-size: 0.9em;
       color: var(--text-secondary);
+      cursor: pointer; /* NEW: Clickable */
+      transition: background-color 0.2s;
+    }
+
+    #notificationList li:hover {
+      background-color: #2a2a2a;
     }
     
     #notificationList li:last-child {
@@ -575,6 +583,10 @@
       text-align: center;
       padding: 20px;
       font-style: italic;
+      cursor: default;
+    }
+    #notificationList .no-notifications:hover {
+      background-color: transparent;
     }
 
     /* ====== "What's New" Modal ====== */
@@ -631,6 +643,50 @@
     .modal-content button:hover {
       background-color: #0056b3;
     }
+    
+    /* ====== NEW: Notification Post Modal ====== */
+    #postModal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 1002; /* Above "What's New" */
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #postModal .modal-content {
+      width: 90%;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding-top: 40px; /* Space for close button */
+    }
+    
+    #postModal .modal-content h2 {
+      margin-top: 0;
+    }
+    
+    #postModalClose {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      color: var(--text-secondary);
+      font-size: 30px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    #postModalClose:hover {
+      color: var(--text-primary);
+    }
+    
+    #postModalBody {
+      /* The comment-box will be injected here */
+    }
   </style>
 </head>
 
@@ -649,6 +705,17 @@
         <li><b>Admin Tools:</b> Admins can now pin and delete posts.</li>
       </ul>
       <button id="closeModalBtn">Got it!</button>
+    </div>
+  </div>
+  
+  <!-- NEW: Notification Post Modal -->
+  <div id="postModal">
+    <div class="modal-content">
+      <span id="postModalClose">&times;</span>
+      <h2>Notification</h2>
+      <div id="postModalBody">
+        <!-- Comment will be injected here -->
+      </div>
     </div>
   </div>
 
@@ -746,8 +813,10 @@
       remove,
       off,
       onChildAdded,
+      onChildRemoved,
       query,
-      limitToLast
+      limitToLast,
+      get 
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     // Firebase Config
@@ -774,6 +843,7 @@
     const FAKE_EMAIL_DOMAIN = "@isrt-feedback.com";
     let allUsers = {}; // Cache for @mentions { uid: 'username' }
     let currentSortOrder = 'newest';
+    let activeNotificationListeners = []; // To detach listeners
 
     // DOM Elements
     const authContainer = document.getElementById("authContainer");
@@ -806,6 +876,12 @@
     
     const sortOrderSelect = document.getElementById("sortOrder");
 
+    // NEW: Post Modal Elements
+    const postModal = document.getElementById("postModal");
+    const postModalClose = document.getElementById("postModalClose");
+    const postModalBody = document.getElementById("postModalBody");
+
+
     // ===== App Initialization =====
     
     // Check for "What's New" modal
@@ -821,6 +897,19 @@
       whatsNewModal.style.display = 'none';
       authContainer.style.display = 'block';
       localStorage.setItem('seenWhatsNew_v1', 'true');
+    });
+
+    // NEW: Post Modal Listeners
+    postModalClose.addEventListener("click", () => {
+      postModal.style.display = "none";
+      postModalBody.innerHTML = ""; // Clear content
+    });
+
+    postModal.addEventListener("click", (e) => {
+      if (e.target === postModal) { // Click on overlay
+        postModal.style.display = "none";
+        postModalBody.innerHTML = ""; // Clear content
+      }
     });
     
     // Global click listener to close menus
@@ -937,13 +1026,19 @@
 
     // Auth State Change (Main app driver)
     onAuthStateChanged(auth, (user) => {
+      // Detach all old notification listeners
+      activeNotificationListeners.forEach(l => off(l.ref, l.type));
+      activeNotificationListeners = [];
+      notificationList.innerHTML = '<li class="no-notifications">No new notifications.</li>';
+      notificationDot.style.display = 'none';
+
       if (user) {
         // User is logged in
         authContainer.style.display = "none";
         appContainer.style.display = "block";
         
         // Get username from database
-        const userRef = ref(db, 'users/' + user.uid);
+        const userRef = ref(db, 'users/' + user.uid); // <-- FIX HERE
         onValue(userRef, (snapshot) => {
           const userData = snapshot.val();
           if (userData && userData.username) {
@@ -985,57 +1080,81 @@
     function listenForNotifications(uid) {
       const notificationsRef = query(ref(db, `notifications/${uid}`), limitToLast(20));
       
-      onChildAdded(notificationsRef, (snapshot) => {
+      const onAdded = onChildAdded(notificationsRef, (snapshot) => {
         const notif = snapshot.val();
         if (!notif.read) {
           notificationDot.style.display = "block";
         }
-        addNotificationToList(notif.message, snapshot.key);
+        addNotificationToList(notif, snapshot.key); // Pass full notif object
       });
+
+      const onRemoved = onChildRemoved(notificationsRef, (snapshot) => {
+        const key = snapshot.key;
+        const li = notificationList.querySelector(`li[data-key="${key}"]`);
+        if (li) {
+          li.remove();
+        }
+        if (notificationList.children.length === 0) {
+            notificationList.innerHTML = '<li class="no-notifications">No new notifications.</li>';
+        }
+      });
+
+      // Store listeners to detach on logout
+      activeNotificationListeners = [
+        { ref: notificationsRef, type: 'child_added', func: onAdded },
+        { ref: notificationsRef, type: 'child_removed', func: onRemoved }
+      ];
       
-      // Check for unread on first load
+      // Check for unread on first load AND if list is empty
       onValue(notificationsRef, (snapshot) => {
          const notifs = snapshot.val();
          let hasUnread = false;
+         let hasNotifs = false;
          if(notifs) {
-           notificationList.innerHTML = ''; // Clear list for rebuild
-           Object.entries(notifs).reverse().forEach(([key, notif]) => {
+           hasNotifs = true;
+           Object.values(notifs).forEach(notif => {
              if (!notif.read) hasUnread = true;
-             addNotificationToList(notif.message, key);
            });
          }
+         
          if (!hasUnread) {
            notificationDot.style.display = 'none';
-           if(!notifs) {
-              notificationList.innerHTML = '<li class="no-notifications">No new notifications.</li>';
-           }
+         }
+         
+         if (!hasNotifs && notificationList.children.length === 0) {
+            notificationList.innerHTML = '<li class="no-notifications">No new notifications.</li>';
          }
       }, { onlyOnce: true });
     }
 
-    function addNotificationToList(message, key) {
-      const existingNoNotifs = notificationList.querySelector('.no-notifications');
-      if (existingNoNotifs) existingNoNotifs.remove();
+    function addNotificationToList(notif, key) {
+      const placeholder = notificationList.querySelector('.no-notifications');
+      if (placeholder) placeholder.remove();
       
       const li = document.createElement("li");
       li.dataset.key = key;
-      li.innerHTML = message; // Using innerHTML to render bold tags from mention
-      notificationList.prepend(li); // Add to top
+      li.innerHTML = `<span>${notif.message}</span>`;
+      
+      // NEW: Add click listener to open modal
+      if (notif.link) {
+        li.dataset.linkPath = notif.link.path;
+        li.dataset.linkType = notif.link.type;
+        li.addEventListener("click", () => handleNotificationClick(notif.link));
+      }
+      
+      notificationList.prepend(li);
     }
-
+    
     notificationBell.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent global click listener
-      const panelOpen = notificationPanel.style.display === 'block';
-      if (panelOpen) {
-        notificationPanel.style.display = 'none';
-      } else {
-        notificationPanel.style.display = 'block';
+      e.stopPropagation();
+      const isOpen = notificationPanel.style.display === 'block';
+      notificationPanel.style.display = isOpen ? 'none' : 'block';
+      
+      if (!isOpen) {
+        // Mark all as read when opening
         notificationDot.style.display = 'none';
-        
-        // Mark all as read in DB
-        const notifs = notificationList.querySelectorAll('li');
         const updates = {};
-        notifs.forEach(li => {
+        notificationList.querySelectorAll('li').forEach(li => {
           if (li.dataset.key) {
             updates[`/notifications/${authUser.uid}/${li.dataset.key}/read`] = true;
           }
@@ -1043,47 +1162,85 @@
         if (Object.keys(updates).length > 0) {
           update(ref(db), updates);
         }
+
+        // Delete old notifications
+        const cutoff = Date.now() - (15 * 24 * 60 * 60 * 1000); // 15 days ago
+        const allNotifsRef = ref(db, `notifications/${authUser.uid}`);
+        get(allNotifsRef).then((snapshot) => {
+          if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+              if (childSnapshot.val().timestamp < cutoff) {
+                remove(childSnapshot.ref);
+              }
+            });
+          }
+        }).catch((error) => {
+           console.error("Error cleaning up notifications:", error);
+        });
       }
     });
 
-    function sendNotification(targetUid, message) {
-      if (!targetUid || targetUid === authUser.uid) return; // Don't notify self
+    // NEW: Handle clicking a notification
+    async function handleNotificationClick(link) {
+      if (!link || !link.path) return;
+
+      postModalBody.innerHTML = ""; // Clear
+      notificationPanel.style.display = 'none'; // Close panel
+      postModal.style.display = 'flex'; // Show modal
+
+      try {
+        const snapshot = await get(ref(db, link.path));
+        if (snapshot.exists()) {
+          const commentData = snapshot.val();
+          
+          // Determine if it's a root comment
+          const pathParts = link.path.split('/');
+          const isRootComment = pathParts.length === 2 && pathParts[0] === 'comments';
+          const category = isRootComment ? null : pathParts[1];
+          
+          // Need to create the element. We pass `true` for isModal to adjust paths.
+          const commentElement = createCommentElement(
+            { id: snapshot.key, ...commentData },
+            category,
+            isRootComment,
+            null,
+            false,
+            true // isModal = true
+          );
+          postModalBody.appendChild(commentElement);
+          
+          // If the link was to a reply, find and scroll to it
+          if (link.type === 'reply' && link.replyId) {
+             const replyBox = commentElement.querySelector(`.reply-box[data-reply-id="${link.replyId}"]`);
+             if (replyBox) {
+               replyBox.style.backgroundColor = 'var(--reaction-highlight)';
+               replyBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+             }
+          }
+
+        } else {
+          postModalBody.innerHTML = "<p>This post may have been deleted.</p>";
+        }
+      } catch (error) {
+        console.error("Error fetching post:", error);
+        postModalBody.innerHTML = "<p>Error loading post.</p>";
+      }
+    }
+    
+    async function sendNotification(targetUid, message, link = null) {
+      if (targetUid === authUser.uid) return; // Don't notify self
       
       const notifRef = ref(db, `notifications/${targetUid}`);
       const newNotif = {
-        message: message,
+        message,
+        timestamp: Date.now(),
         read: false,
-        timestamp: Date.now()
+        link // NEW: Add link object
       };
-      push(notifRef, newNotif);
+      await push(notifRef, newNotif);
     }
-    
-    // ===== Comment & Reply Logic =====
 
-    // Handle tab switching
-    tabsContainer.addEventListener("click", (e) => {
-      if (e.target.classList.contains("tab-btn")) {
-        const newCategory = e.target.dataset.category;
-        if (newCategory === currentCategory) return;
-        
-        const oldActive = tabsContainer.querySelector(".active");
-        if(oldActive) oldActive.classList.remove("active");
-        
-        e.target.classList.add("active");
-        currentCategory = newCategory;
-        
-        // Hide form on "All Comments" tab
-        commentForm.style.display = (currentCategory === 'all') ? 'none' : 'block';
-        
-        loadComments();
-      }
-    });
-    
-    // Handle sorting
-    sortOrderSelect.addEventListener("change", (e) => {
-      currentSortOrder = e.target.value;
-      loadComments(); // Reload comments with new sort order
-    });
+    // ===== Comment System =====
 
     // Handle new comment submission
     commentForm.addEventListener("submit", (e) => {
@@ -1096,8 +1253,8 @@
         timestamp: Date.now(),
         userId: authUser.uid,
         username: authUser.username,
-        replies: [],
-        reactions: {},
+        replies: {}, // Use object
+        reactions: {}, // Use object
       };
       
       const commentsRef = ref(db, `comments/${currentCategory}`);
@@ -1105,419 +1262,285 @@
       commentText.value = "";
     });
 
-    // Main function to load comments
+    // Handle tab switching
+    tabsContainer.addEventListener("click", (e) => {
+      if (e.target.classList.contains("tab-btn")) {
+        const newCategory = e.target.dataset.category;
+        if (newCategory === currentCategory) return;
+
+        tabsContainer.querySelector(".active").classList.remove("active");
+        e.target.classList.add("active");
+        currentCategory = newCategory;
+        
+        // Hide/show comment form
+        if (currentCategory === 'all') {
+          commentForm.style.display = 'none';
+        } else {
+          commentForm.style.display = 'block';
+        }
+        
+        loadComments();
+      }
+    });
+    
+    // Handle sorting
+    sortOrderSelect.addEventListener("change", (e) => {
+      currentSortOrder = e.target.value;
+      loadComments();
+    });
+
+    // Load comments
     function loadComments() {
       commentsContainer.innerHTML = "";
       loadingElement.style.display = "block";
-      
-      if (currentCommentsRef) {
-        off(currentCommentsRef); // Detach old listener
-      }
+      if (currentCommentsRef) off(currentCommentsRef); // Detach old listener
 
       if (currentCategory === 'all') {
-        loadAllComments();
+        fetchAllComments();
       } else {
-        loadCategoryComments(currentCategory);
+        fetchCategoryComments(currentCategory);
       }
     }
     
-    function loadCategoryComments(category) {
-      currentCommentsRef = ref(db, `comments/${category}`);
-      onValue(currentCommentsRef, (snapshot) => {
-        handleSnapshot(snapshot.val(), category);
+    function fetchAllComments() {
+      const categories = ['general', 'seniors', 'juniors', 'faculty'];
+      const promises = categories.map(cat => {
+        return new Promise((resolve) => {
+          const catRef = ref(db, `comments/${cat}`);
+          onValue(catRef, (snapshot) => {
+            resolve({ category: cat, data: snapshot.val() || {} });
+          }, { onlyOnce: true });
+        });
+      });
+      
+      // Also fetch old, root-level comments
+      promises.push(new Promise((resolve) => {
+        const rootRef = ref(db, 'comments');
+        onValue(rootRef, (snapshot) => {
+           const allData = snapshot.val() || {};
+           const rootComments = {};
+           Object.entries(allData).forEach(([key, value]) => {
+             // Filter out category folders
+             if (key !== 'general' && key !== 'seniors' && key !== 'juniors' && key !== 'faculty') {
+               rootComments[key] = value;
+             }
+           });
+           resolve({ category: null, data: rootComments, isRoot: true });
+        }, { onlyOnce: true });
+      }));
+
+      Promise.all(promises).then(results => {
+        loadingElement.style.display = 'none';
+        let allComments = [];
+        
+        results.forEach(result => {
+          const { category, data, isRoot } = result;
+          const comments = Object.entries(data).map(([id, c]) => ({ 
+            id, 
+            ...c, 
+            category: isRoot ? null : category, // Store category
+            isRoot: isRoot || false
+          }));
+          allComments = allComments.concat(comments);
+        });
+        
+        displayComments(allComments);
       });
     }
 
-    function loadAllComments() {
-      // Use onValue to fetch *all* comments data at once
-      currentCommentsRef = ref(db, 'comments');
+    function fetchCategoryComments(category) {
+      currentCommentsRef = ref(db, `comments/${category}`);
       onValue(currentCommentsRef, (snapshot) => {
-        const allData = snapshot.val();
-        if (!allData) {
-          handleSnapshot(null);
-          return;
-        }
-
-        let combinedComments = {};
+        loadingElement.style.display = 'none';
+        const data = snapshot.val() || {};
+        const comments = Object.entries(data).map(([id, c]) => ({ 
+          id, 
+          ...c, 
+          category: category,
+          isRoot: false 
+        }));
         
-        Object.entries(allData).forEach(([key, value]) => {
-          if (['general', 'seniors', 'juniors', 'faculty'].includes(key)) {
-            // It's a category folder
-            Object.entries(value).forEach(([id, comment]) => {
-              combinedComments[id] = { ...comment, id, category: key, isOld: false };
-            });
-          } else {
-            // It's an "old" root-level comment
-            combinedComments[key] = { ...value, id: key, category: 'general', isOld: true };
-          }
-        });
-        
-        handleSnapshot(combinedComments);
-        
-      }); // Kept as onValue to reflect pins/deletes from other tabs
+        displayComments(comments);
+      });
     }
-
-    // Process and render comments from a snapshot
-    function handleSnapshot(data, category = null) {
-      loadingElement.style.display = "none";
+    
+    function displayComments(comments) {
       commentsContainer.innerHTML = "";
-
-      if (!data) {
+      if (comments.length === 0) {
         commentsContainer.innerHTML = "<p>No comments yet. Be the first!</p>";
         return;
       }
+      
+      // Calculate reaction counts for sorting
+      comments.forEach(c => {
+        // NEW: Reaction count is just the number of keys
+        c.reactionCount = Object.keys(c.reactions || {}).length;
+      });
+      
+      // Separate pinned comments
+      const pinned = comments.filter(c => c.isPinned);
+      const unpinned = comments.filter(c => !c.isPinned);
 
-      let comments = Object.entries(data)
-        .map(([id, c]) => ({
-          id,
-          ...c,
-          category: c.category || category, // Ensure category is set
-          isOld: c.isOld || (category === null && !c.category) // Flag old comments
-        }));
-        
-      // --- Sorting Logic ---
-      
-      // 1. Separate Pinned Comments
-      const pinnedComments = comments.filter(c => c.isPinned);
-      const otherComments = comments.filter(c => !c.isPinned);
-      
-      // 2. Sort Other Comments
-      if (currentSortOrder === 'popular') {
-        otherComments.sort((a, b) => {
-          const countA = Object.values(a.reactions || {}).reduce((s, c) => s + c, 0);
-          const countB = Object.values(b.reactions || {}).reduce((s, c) => s + c, 0);
-          return countB - countA;
-        });
-      } else {
-        // Default to 'newest'
-        otherComments.sort((a, b) => b.timestamp - a.timestamp);
+      // Sort unpinned comments
+      if (currentSortOrder === 'newest') {
+        unpinned.sort((a, b) => b.timestamp - a.timestamp);
+      } else if (currentSortOrder === 'popular') {
+        unpinned.sort((a, b) => b.reactionCount - a.reactionCount);
       }
-
-      // 3. Combine Pinned + Others
-      const sortedComments = [...pinnedComments, ...otherComments];
+      
+      // Pinned always come first
+      const sortedComments = [...pinned, ...unpinned];
 
       sortedComments.forEach((c) => {
-        const el = createCommentElement(c);
+        const el = createCommentElement(c, c.category, c.isRoot);
         commentsContainer.appendChild(el);
       });
     }
-
-    // ===== Element Creation (The Core) =====
     
-    // Helper: Format time
-    function timeAgo(timestamp) {
-      const now = Date.now();
-      const seconds = Math.floor((now - timestamp) / 1000);
-      
-      let interval = seconds / 31536000; // years
-      if (interval > 1) return Math.floor(interval) + "y ago";
-      interval = seconds / 2592000; // months
-      if (interval > 1) return Math.floor(interval) + "mo ago";
-      interval = seconds / 86400; // days
-      if (interval > 1) return Math.floor(interval) + "d ago";
-      interval = seconds / 3600; // hours
-      if (interval > 1) return Math.floor(interval) + "h ago";
-      interval = seconds / 60; // minutes
-      if (interval > 1) return Math.floor(interval) + "m ago";
-      return "just now";
-    }
-    
-    // Helper: Sanitize text for display
-    function sanitizeAndHighlightMentions(text) {
-      if (!text) return '';
-      // 1. Sanitize: Escape HTML characters to prevent XSS
-      const sanitizedText = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-        
-      // 2. Highlight: Find @mentions
-      const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-      const allUsernames = Object.values(allUsers).map(u => u.username);
-      
-      return sanitizedText.replace(mentionRegex, (match, username) => {
-        // Check if it's a real user
-        if (allUsernames.includes(username)) {
-          return `<span class="mention">${match}</span>`;
-        } else {
-          return match; // It's not a real user, just text
-        }
-      });
-    }
-
-    // Main element creation function
-    function createCommentElement(comment, isReply = false, parentComment = null) {
+    // Create a comment element
+    function createCommentElement(comment, category, isRootComment, parentId = null, isReply = false, isModal = false) {
       const box = document.createElement("div");
       box.classList.add(isReply ? "reply-box" : "comment-box");
+      if (comment.isPinned) box.classList.add('pinned-comment');
+      if (isReply) box.dataset.replyId = comment.id; // For scrolling
 
-      // --- Header: Author, Time, Pinned Badge ---
       const header = document.createElement("div");
       header.classList.add("comment-header");
-      
-      const authorWrap = document.createElement('div'); // Wrap author/time
+
       const author = document.createElement("span");
       author.classList.add("comment-author");
-      author.textContent = comment.username;
+      author.textContent = comment.username || 'Anonymous';
       if (comment.username?.toLowerCase() === 'admin') author.classList.add('admin');
       if (comment.username?.toLowerCase() === 'tuntun') author.classList.add('tuntun');
-      authorWrap.appendChild(author);
+      header.appendChild(author);
       
       const time = document.createElement("span");
       time.classList.add("comment-time");
-      time.textContent = `• ${timeAgo(comment.timestamp)}`;
-      authorWrap.appendChild(time);
+      time.textContent = `• ${getRelativeTime(comment.timestamp)}`;
+      header.appendChild(time);
       
-      if (comment.isPinned && !isReply) {
-        box.classList.add('pinned-comment');
-        const pinnedBadge = document.createElement("span");
-        pinnedBadge.classList.add("pinned-badge");
-        pinnedBadge.textContent = "📌 Pinned";
-        authorWrap.appendChild(pinnedBadge);
+      if (comment.isPinned) {
+        const pinned = document.createElement("span");
+        pinned.classList.add("pinned-badge");
+        pinned.textContent = "📌 Pinned";
+        header.appendChild(pinned);
       }
-      
-      header.appendChild(authorWrap);
-      box.appendChild(header); // Add header first
 
-      // --- Comment Menu (Edit, Delete, Pin) ---
-      const menuContainer = document.createElement("div");
-      menuContainer.classList.add("comment-menu");
+      box.appendChild(header);
+
+      const text = document.createElement("p");
+      text.classList.add(isReply ? "reply-text" : "comment-text");
+      // Sanitize and highlight mentions
+      text.innerHTML = sanitizeAndHighlightMentions(comment.text);
+      box.appendChild(text);
+      
+      // ===== Comment Menu (Edit/Delete/Pin) =====
+      const menu = document.createElement("div");
+      menu.classList.add("comment-menu");
       
       const menuTrigger = document.createElement("button");
       menuTrigger.classList.add("menu-trigger-btn");
-      menuTrigger.innerHTML = "⋮";
+      menuTrigger.innerHTML = "&vellip;"; // ⋮
       
       const menuDropdown = document.createElement("div");
       menuDropdown.classList.add("menu-dropdown");
       
-      let hasMenuOptions = false;
-      
-      // --- Edit Button ---
-      if (authUser?.uid === comment.userId) {
-        hasMenuOptions = true;
-        const editBtn = document.createElement("button");
-        editBtn.innerHTML = "✏️ Edit";
-        editBtn.classList.add("edit-btn");
-        menuDropdown.appendChild(editBtn);
-        
-        editBtn.addEventListener("click", () => {
-          // Find the edit form within this 'box'
-          box.querySelector('.edit-form').style.display = 'block';
-          // Find the text element within this 'box'
-          box.querySelector(isReply ? '.reply-text' : '.comment-text').style.display = 'none';
-          menuDropdown.style.display = 'none';
-        });
-      }
-      
-      // --- Pin Button (Admin Only, Not on replies) ---
-      if (authUser?.username.toLowerCase() === 'admin' && !isReply) {
-        hasMenuOptions = true;
+      menuTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Close all other menus
+        document.querySelectorAll('.menu-dropdown').forEach(m => m.style.display = 'none');
+        menuDropdown.style.display = menuDropdown.style.display === 'block' ? 'none' : 'block';
+      });
+
+      // Add actions based on permissions
+      const isAdmin = authUser?.username?.toLowerCase() === 'admin';
+      const isOwner = authUser?.uid === comment.userId;
+      let hasMenu = false;
+
+      // Pin button (Admin only, not on replies, not in modal)
+      if (isAdmin && !isReply && !isModal) {
+        hasMenu = true;
         const pinBtn = document.createElement("button");
-        pinBtn.innerHTML = comment.isPinned ? "📌 Unpin" : "📌 Pin";
         pinBtn.classList.add("pin-btn");
-        menuDropdown.appendChild(pinBtn);
-        
-        pinBtn.addEventListener("click", () => {
-          const path = `comments/${comment.category}/${comment.id}/isPinned`;
-          const isOldPath = `comments/${comment.id}/isPinned`;
-          
-          const newPinState = !comment.isPinned;
-          update(ref(db), { [comment.isOld ? isOldPath : path]: (newPinState ? true : null) }); // Use null to remove
-          menuDropdown.style.display = 'none';
-        });
-      }
-      
-      // --- Delete Button ---
-      if (authUser?.uid === comment.userId || authUser?.username.toLowerCase() === 'admin') {
-        hasMenuOptions = true;
-        const deleteBtn = document.createElement("button");
-        deleteBtn.innerHTML = "🗑️ Delete";
-        deleteBtn.classList.add("delete-btn");
-        menuDropdown.appendChild(deleteBtn);
-        
-        deleteBtn.addEventListener("click", () => {
-           if (deleteBtn.classList.contains('confirm')) {
-             // --- Perform Delete ---
-             let path;
-             if (isReply) {
-                path = `comments/${parentComment.category}/replies/${parentComment.id}/replies/${comment.id}`;
-                if (parentComment.isOld) {
-                   path = `comments/${parentComment.id}/replies/${comment.id}`;
-                }
-             } else {
-                path = `comments/${comment.category}/${comment.id}`;
-                if (comment.isOld) {
-                   path = `comments/${comment.id}`;
-                }
-             }
-             remove(ref(db, path));
-             box.remove(); // Remove from UI immediately
-             
-           } else {
-             // --- Ask for confirm ---
-             deleteBtn.classList.add('confirm');
-             deleteBtn.textContent = "Confirm?";
-             // Reset other delete buttons
-             document.querySelectorAll('.delete-btn.confirm').forEach(btn => {
-                if (btn !== deleteBtn) {
-                  btn.classList.remove('confirm');
-                  btn.innerHTML = "🗑️ Delete";
-                }
-             });
-             setTimeout(() => {
-               deleteBtn.classList.remove('confirm');
-               deleteBtn.innerHTML = "🗑️ Delete";
-             }, 3000);
-           }
-        });
-      }
-      
-      // Only add the menu if it has options
-      if (hasMenuOptions) {
-        menuContainer.appendChild(menuTrigger);
-        menuContainer.appendChild(menuDropdown);
-        header.appendChild(menuContainer);
-        
-        menuTrigger.addEventListener("click", (e) => {
+        pinBtn.textContent = comment.isPinned ? "📌 Unpin" : "📌 Pin";
+        pinBtn.onclick = (e) => {
           e.stopPropagation();
-          // Close all other menus
-          document.querySelectorAll('.menu-dropdown').forEach(menu => {
-            if(menu !== menuDropdown) menu.style.display = 'none';
-          });
-          // Toggle this menu
-          menuDropdown.style.display = menuDropdown.style.display === 'block' ? 'none' : 'block';
-        });
+          const commentPath = isRootComment 
+            ? `comments/${comment.id}` 
+            : `comments/${category}/${comment.id}`;
+          const updates = { [`${commentPath}/isPinned`]: !comment.isPinned };
+          update(ref(db), updates);
+          menuDropdown.style.display = 'none';
+        };
+        menuDropdown.appendChild(pinBtn);
       }
 
-      // --- Comment Text ---
-      const textEl = document.createElement("p");
-      textEl.classList.add(isReply ? "reply-text" : "comment-text");
-      textEl.innerHTML = sanitizeAndHighlightMentions(comment.text);
-      box.appendChild(textEl);
+      // Edit button (Owner only)
+      if (isOwner) {
+        hasMenu = true;
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️ Edit";
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          menuDropdown.style.display = 'none';
+          showEditForm(box, text, comment, category, isRootComment, parentId, isReply);
+        };
+        menuDropdown.appendChild(editBtn);
+      }
       
-      // --- Edit Form (hidden by default) ---
-      let editForm = null;
-      if (authUser?.uid === comment.userId) {
-        editForm = document.createElement("form");
-        editForm.classList.add("edit-form");
-        editForm.style.display = "none";
-
-        const editInput = document.createElement("textarea");
-        editInput.value = comment.text;
-        
-        const editButtons = document.createElement("div");
-        editButtons.classList.add("edit-form-buttons");
-        
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "Save";
-        saveBtn.type = "submit";
-        
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "Cancel";
-        cancelBtn.type = "button";
-        cancelBtn.classList.add("cancel-btn");
-
-        editButtons.appendChild(cancelBtn);
-        editButtons.appendChild(saveBtn);
-        editForm.appendChild(editInput);
-        editForm.appendChild(editButtons);
-        box.appendChild(editForm);
-
-        // Edit form submit logic
-        editForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const newText = editInput.value.trim();
-          if (!newText) return; // Don't save empty
-          
-          let path;
-          if (isReply) {
-             path = `comments/${parentComment.category}/replies/${parentComment.id}/replies/${comment.id}/text`;
-             if (parentComment.isOld) {
-                path = `comments/${parentComment.id}/replies/${comment.id}/text`;
-             }
+      // Delete button (Owner or Admin)
+      if (isOwner || isAdmin) {
+        hasMenu = true;
+        const deleteBtn = document.createElement("button");
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.textContent = "🗑️ Delete";
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (deleteBtn.textContent === "🗑️ Delete") {
+            deleteBtn.textContent = "Confirm?";
           } else {
-             path = `comments/${comment.category}/${comment.id}/text`;
-             if (comment.isOld) {
-                path = `comments/${comment.id}/text`;
-             }
+            let itemPath;
+            if (isReply) {
+              const replyParentPath = isRootComment 
+                ? `comments/${parentId}` 
+                : `comments/${category}/${parentId}`;
+              itemPath = `${replyParentPath}/replies/${comment.id}`;
+            } else {
+              itemPath = isRootComment 
+                ? `comments/${comment.id}` 
+                : `comments/${category}/${comment.id}`;
+            }
+            remove(ref(db, itemPath));
+            if (isModal) {
+              postModal.style.display = "none";
+              postModalBody.innerHTML = "";
+            }
           }
-
-          update(ref(db), { [path]: newText });
-          textEl.innerHTML = sanitizeAndHighlightMentions(newText);
-          editForm.style.display = 'none';
-          textEl.style.display = 'block';
-        });
-        
-        cancelBtn.addEventListener("click", () => {
-          editForm.style.display = 'none';
-          textEl.style.display = 'block';
-          editInput.value = comment.text; // Reset changes
-        });
+        };
+        menuDropdown.appendChild(deleteBtn);
       }
 
-      // --- Controls: Actions & Reactions ---
+      if (hasMenu) {
+        menu.appendChild(menuTrigger);
+        menu.appendChild(menuDropdown);
+        header.appendChild(menu); // Add menu to header
+      }
+
+      // ===== Controls (Reply/Reactions) =====
       const controls = document.createElement("div");
       controls.classList.add("controls");
       
       const actionButtons = document.createElement("div");
       actionButtons.classList.add("action-buttons");
 
-      // --- Reply Button (Not on "All" tab) ---
-      let replyBtn = null;
-      if (!isReply && currentCategory !== 'all') {
-        replyBtn = document.createElement("button");
+      let replyForm = null;
+      // Add reply button (not on replies, not on 'all' tab unless in modal)
+      if (!isReply && (currentCategory !== 'all' || isModal)) {
+        const replyBtn = document.createElement("button");
         replyBtn.textContent = "💬 Reply";
         replyBtn.classList.add("reply-btn");
         actionButtons.appendChild(replyBtn);
-      }
-            
-      controls.appendChild(actionButtons);
 
-      // --- Reaction Buttons ---
-      const reactionContainer = document.createElement("div");
-      reactionContainer.classList.add("reaction-options");
-      
-      reactions.forEach((emoji) => {
-        const span = document.createElement("span");
-        const count = comment.reactions?.[emoji] || 0;
-        span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
-        span.classList.add("reaction");
-
-        span.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          let path;
-          if (isReply) {
-             path = `comments/${parentComment.category}/replies/${parentComment.id}/replies/${comment.id}/reactions/${emoji}`;
-             if (parentComment.isOld) {
-                path = `comments/${parentComment.id}/replies/${comment.id}/reactions/${emoji}`;
-             }
-          } else {
-             path = `comments/${comment.category}/${comment.id}/reactions/${emoji}`;
-             if (comment.isOld) {
-                path = `comments/${comment.id}/reactions/${emoji}`;
-             }
-          }
-          
-          const newCount = (comment.reactions?.[emoji] || 0) + 1;
-          update(ref(db), { [path]: newCount });
-          
-          // Send notification for reaction
-          sendNotification(
-            comment.userId,
-            `<strong>${authUser.username}</strong> reacted ${emoji} to your ${isReply ? 'reply' : 'comment'}.`
-          );
-        });
-
-        reactionContainer.appendChild(span);
-      });
-      
-      controls.appendChild(reactionContainer);
-      box.appendChild(controls);
-
-      // --- Reply Form (if not a reply itself) ---
-      let replyForm = null;
-      if (!isReply && currentCategory !== 'all' && replyBtn) {
         replyForm = document.createElement("form");
         replyForm.classList.add("reply-form");
         replyForm.style.display = "none";
@@ -1525,78 +1548,71 @@
         const replyInput = document.createElement("textarea");
         replyInput.placeholder = "Write a reply...";
         
-        // --- Mention Suggestions ---
         const mentionSuggestions = document.createElement('div');
         mentionSuggestions.classList.add('mention-suggestions');
         
-        // Build list of people in the thread (OP + all repliers)
-        const threadUsernames = new Set([comment.username]);
-        if (comment.replies) {
-          Object.values(comment.replies).forEach(r => threadUsernames.add(r.username));
+        // Build list of users to mention
+        const mentionableUsers = new Set();
+        if(comment.username) mentionableUsers.add(comment.username);
+        if(comment.replies) {
+           Object.values(comment.replies).forEach(r => {
+             if(r.username) mentionableUsers.add(r.username);
+           });
         }
+        mentionableUsers.delete(authUser.username); // Don't suggest self
         
-        if (threadUsernames.size > 0) {
-          mentionSuggestions.appendChild(document.createTextNode('Mention: '));
-          threadUsernames.forEach(username => {
-            if (username === authUser.username) return; // Don't suggest self
-            
+        if (mentionableUsers.size > 0) {
+          mentionSuggestions.innerHTML = '<span>Mention:</span>';
+          mentionableUsers.forEach(username => {
             const mentionBtn = document.createElement('button');
             mentionBtn.type = 'button';
             mentionBtn.classList.add('mention-btn');
             mentionBtn.textContent = `@${username}`;
-            mentionBtn.addEventListener('click', () => {
+            mentionBtn.onclick = () => {
               replyInput.value += ` @${username} `;
               replyInput.focus();
-            });
+            };
             mentionSuggestions.appendChild(mentionBtn);
           });
         }
-        
+
         const replyButtons = document.createElement("div");
         replyButtons.classList.add("reply-form-buttons");
+
+        const replyCancel = document.createElement("button");
+        replyCancel.type = "button";
+        replyCancel.textContent = "Cancel";
+        replyCancel.classList.add("cancel-btn");
+        replyCancel.onclick = () => { replyForm.style.display = "none"; };
         
         const replySubmit = document.createElement("button");
-        replySubmit.textContent = "Post Reply";
         replySubmit.type = "submit";
-        
-        const cancelReplyBtn = document.createElement("button");
-        cancelReplyBtn.textContent = "Cancel";
-        cancelReplyBtn.type = "button";
-        cancelReplyBtn.classList.add("cancel-btn");
-        
-        replyButtons.appendChild(cancelReplyBtn);
+        replySubmit.textContent = "Post Reply";
+
+        replyButtons.appendChild(replyCancel);
         replyButtons.appendChild(replySubmit);
-
+        
         replyForm.appendChild(replyInput);
-        if (threadUsernames.size > 1 || (threadUsernames.size === 1 && !threadUsernames.has(authUser.username))) {
-          replyForm.appendChild(mentionSuggestions);
-        }
+        replyForm.appendChild(mentionSuggestions);
         replyForm.appendChild(replyButtons);
-        box.appendChild(replyForm);
 
-        // Toggle reply form
         replyBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          if (e.target.classList.contains("reaction")) return; // Fix bug
+          if (e.target.classList.contains("reaction")) return;
           e.stopPropagation();
           const isOpen = replyForm.style.display === "block";
-          document.querySelectorAll('.reply-form').forEach(f => f.style.display = 'none');
+          // Close all forms in this box
+          box.querySelectorAll('.reply-form').forEach(f => f.style.display = 'none');
           if (!isOpen) {
             replyForm.style.display = "block";
             replyForm.querySelector('textarea').focus();
           }
         });
-        
-        cancelReplyBtn.addEventListener("click", () => {
-          replyForm.style.display = "none";
-        });
 
-        // Submit reply logic
         replyForm.addEventListener("submit", (e) => {
           e.preventDefault();
           const replyText = replyInput.value.trim();
           if (!replyText || !authUser) return;
-
+          
           const reply = {
             text: replyText,
             timestamp: Date.now(),
@@ -1605,60 +1621,124 @@
             reactions: {},
           };
 
-          const path = `comments/${comment.category}/replies/${comment.id}/replies`;
-          const oldPath = `comments/${comment.id}/replies`;
+          const replyPath = isRootComment 
+            ? `comments/${comment.id}/replies`
+            : `comments/${category}/${comment.id}/replies`;
           
-          push(ref(db, comment.isOld ? oldPath : path), reply);
+          const newReplyRef = push(ref(db, replyPath), reply);
           
-          // --- Handle Mention Notifications ---
-          const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-          const mentionedUsers = new Set();
-          let match;
-          while ((match = mentionRegex.exec(replyText)) !== null) {
-            mentionedUsers.add(match[1]); // Add username
-          }
+          // --- Handle Reply Notifications ---
+          // Link to the *top-level* comment, but note the reply ID
+          const linkInfo = {
+             path: isRootComment ? `comments/${comment.id}` : `comments/${category}/${comment.id}`,
+             type: 'reply',
+             replyId: newReplyRef.key
+          };
           
-          const mentionedUserIds = new Set();
-          Object.entries(allUsers).forEach(([uid, userData]) => {
-            if (mentionedUsers.has(userData.username)) {
-              mentionedUserIds.add(uid);
-            }
-          });
-
-          if (mentionedUserIds.size > 0) {
-            // Send to mentioned users
-            mentionedUserIds.forEach(uid => {
-              sendNotification(
-                uid,
-                `<strong>${authUser.username}</strong> mentioned you in a reply.`
-              );
+          const mentionedUsers = extractMentions(replyText);
+          if (mentionedUsers.size > 0) {
+            // Notify mentioned users
+            mentionedUsers.forEach(username => {
+              const targetUser = Object.entries(allUsers).find(([uid, data]) => data.username === username);
+              if (targetUser) {
+                sendNotification(targetUser[0], `<strong>${authUser.username}</strong> mentioned you in a reply.`, linkInfo);
+              }
             });
           } else {
-            // Send to original commenter
-            sendNotification(
-              comment.userId,
-              `<strong>${authUser.username}</strong> replied to your comment.`
-            );
+            // Notify original commenter (if not self)
+            if (comment.userId !== authUser.uid) {
+              sendNotification(comment.userId, `<strong>${authUser.username}</strong> replied to your comment.`, linkInfo);
+            }
           }
-
+          
           replyInput.value = "";
           replyForm.style.display = "none";
         });
       }
+      
+      controls.appendChild(actionButtons);
 
-      // --- Render Replies Recursively ---
+      // ===== Reaction Controls (NEW LOGIC) =====
+      const reactionContainer = document.createElement("div");
+      reactionContainer.classList.add("reaction-options");
+      
+      // 1. Get counts for all emojis
+      const reactionCounts = Object.values(comment.reactions || {}).reduce((acc, emoji) => {
+        acc[emoji] = (acc[emoji] || 0) + 1;
+        return acc;
+      }, {});
+      
+      // 2. Get the current user's reaction
+      const userReaction = comment.reactions?.[authUser.uid];
+
+      reactions.forEach((emoji) => {
+        const span = document.createElement("span");
+        const count = reactionCounts[emoji] || 0;
+        
+        span.textContent = count > 0 ? `${emoji} ${count}` : emoji;
+        span.classList.add("reaction");
+        
+        // 3. Highlight user's reaction
+        if (userReaction === emoji) {
+          span.classList.add("user-reacted");
+        }
+
+        span.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          
+          let userReactionPath;
+          let linkPath; // For notification
+          
+          if (isReply) {
+             const replyParentPath = isRootComment 
+               ? `comments/${parentId}` 
+               : `comments/${category}/${parentId}`;
+             userReactionPath = `${replyParentPath}/replies/${comment.id}/reactions/${authUser.uid}`;
+             linkPath = replyParentPath; // Link to parent comment
+          } else {
+             const commentPath = isRootComment 
+               ? `comments/${comment.id}` 
+               : `comments/${category}/${comment.id}`;
+             userReactionPath = `${commentPath}/reactions/${authUser.uid}`;
+             linkPath = commentPath;
+          }
+
+          // 4. Set, change, or remove reaction
+          const reactionRef = ref(db, userReactionPath);
+          if (userReaction === emoji) {
+            // User clicked their own reaction, remove it
+            remove(reactionRef);
+          } else {
+            // User clicked a new or different reaction, set it
+            set(reactionRef, emoji);
+            
+            // Send notification (but not for self, and only on new reaction)
+            if(comment.userId !== authUser.uid && !userReaction) {
+              const linkInfo = { path: linkPath, type: 'reaction' };
+              sendNotification(comment.userId, `<strong>${authUser.username}</strong> reacted ${emoji} to your post.`, linkInfo);
+            }
+          }
+        });
+
+        reactionContainer.appendChild(span);
+      });
+
+      controls.appendChild(reactionContainer);
+      box.appendChild(controls);
+      if (replyForm) box.appendChild(replyForm);
+
+      // ===== Render Replies =====
       if (comment.replies) {
         const repliesDiv = document.createElement("div");
         repliesDiv.classList.add("replies");
-        
-        // Sort replies by oldest first
-        const sortedReplies = Object.entries(comment.replies)
+        const sorted = Object.entries(comment.replies)
           .map(([id, r]) => ({ id, ...r }))
           .sort((a, b) => a.timestamp - b.timestamp);
-          
-        sortedReplies.forEach((r) => {
-          // Pass parent comment (which is 'comment') to the reply
-          repliesDiv.appendChild(createCommentElement(r, true, comment));
+        
+        sorted.forEach((r) => {
+          // Pass parent ID (comment.id)
+          repliesDiv.appendChild(createCommentElement(r, category, isRootComment, comment.id, true, isModal));
         });
         box.appendChild(repliesDiv);
       }
@@ -1666,6 +1746,123 @@
       return box;
     }
     
+    // Show edit form
+    function showEditForm(box, textElement, comment, category, isRootComment, parentId, isReply) {
+      textElement.style.display = 'none'; // Hide text
+      
+      const editForm = document.createElement("form");
+      editForm.classList.add("edit-form");
+      
+      const editInput = document.createElement("textarea");
+      editInput.value = comment.text;
+      
+      const editButtons = document.createElement("div");
+      editButtons.classList.add("edit-form-buttons");
+      
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.classList.add("cancel-btn");
+      cancelBtn.onclick = () => {
+        editForm.remove();
+        textElement.style.display = 'block';
+      };
+      
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "submit";
+      saveBtn.textContent = "Save";
+      
+      editButtons.appendChild(cancelBtn);
+      editButtons.appendChild(saveBtn);
+      
+      editForm.appendChild(editInput);
+      editForm.appendChild(editButtons);
+      
+      box.insertBefore(editForm, textElement.nextSibling);
+      editInput.focus();
+      
+      editForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const newText = editInput.value.trim();
+        if (!newText) return;
+        
+        let itemPath;
+        if (isReply) {
+          const replyParentPath = isRootComment 
+            ? `comments/${parentId}` 
+            : `comments/${category}/${parentId}`;
+          itemPath = `${replyParentPath}/replies/${comment.id}`;
+        } else {
+          itemPath = isRootComment 
+            ? `comments/${comment.id}` 
+            : `comments/${category}/${comment.id}`;
+        }
+        
+        update(ref(db, itemPath), { text: newText });
+        
+        // No need to hide form, element will be re-rendered
+      });
+    }
+
+    // ===== Utility Functions =====
+    
+    // Sanitize text for display
+    function sanitize(text) {
+      const el = document.createElement('div');
+      el.textContent = text;
+      return el.innerHTML;
+    }
+    
+    // Find @mentions in text
+    function extractMentions(text) {
+      const mentionRegex = /@(\w+)/g;
+      const matches = text.match(mentionRegex);
+      if (!matches) return new Set();
+      
+      const allUsernames = Object.values(allUsers).map(u => u.username);
+      
+      // Get usernames from matches (e.g., '@admin' -> 'admin')
+      // And filter to only include usernames that actually exist
+      return new Set(
+        matches.map(m => m.substring(1)).filter(u => allUsernames.includes(u))
+      );
+    }
+    
+    // Highlight @mentions in text
+    function sanitizeAndHighlightMentions(text) {
+      if (!text) return '';
+      const allUsernames = Object.values(allUsers).map(u => u.username);
+      
+      // Regex to find @mentions, but only if they are valid users
+      const mentionRegex = /@(\w+)/g;
+      
+      return sanitize(text).replace(mentionRegex, (match, username) => {
+        if (allUsernames.includes(username)) {
+          return `<span class="mention">@${username}</span>`;
+        } else {
+          return match; // Not a valid user, return original text
+        }
+      });
+    }
+    
+    // Get relative time
+    function getRelativeTime(timestamp) {
+      const now = Date.now();
+      const seconds = Math.floor((now - timestamp) / 1000);
+      
+      let interval = seconds / 31536000;
+      if (interval > 1) return Math.floor(interval) + "y ago";
+      interval = seconds / 2592000;
+      if (interval > 1) return Math.floor(interval) + "mo ago";
+      interval = seconds / 86400;
+      if (interval > 1) return Math.floor(interval) + "d ago";
+      interval = seconds / 3600;
+      if (interval > 1) return Math.floor(interval) + "h ago";
+      interval = seconds / 60;
+      if (interval > 1) return Math.floor(interval) + "m ago";
+      return Math.floor(seconds) + "s ago";
+    }
+
   </script>
 </body>
 </html>
